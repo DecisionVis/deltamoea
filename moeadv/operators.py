@@ -21,11 +21,14 @@ def pm_inner(x_lower, x_upper, di):
     exponent = 1.0 / alpha
     def operator(x_parent):
         x_parent_scaled = (x_parent - x_lower) / (x_upper - x_lower)
+        assert(0 <= x_parent_scaled <= 1)
         # Warning!  I use γ = 1-δ, since they only use 1-δ
-        if x_parent > 0.5:
+        if x_parent_scaled > 0.5:
             gamma = x_parent_scaled
         else:
             gamma = 1.0 - x_parent_scaled
+        assert(0.5 <= gamma)
+        assert(gamma <= 1.0)
         uniform = random() # on [0,1]
         beta = (gamma ** alpha) * (1 - 2 * uniform)
         if uniform <= 0.5:
