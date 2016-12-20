@@ -13,7 +13,7 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
     def __init__(self, *args, **kwargs):
         super(HelloTriangle, self).__init__(*args, **kwargs)
         self.vp = QOpenGLVersionProfile()
-        # create the shader program here
+        self.shader_program = QOpenGLShaderProgram(self)
     def initializeGL(self):
         self.vp.setVersion(2,1)
         # rename to vertex_program_text
@@ -33,7 +33,6 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
             gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
         }
         """
-        self.shader_program = QOpenGLShaderProgram(self)
         self.shader_program.create() # try to remove?
         self.shader_program.bind() # try to remove?
         self.shader_program.addShaderFromSourceCode(
