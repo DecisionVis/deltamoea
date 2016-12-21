@@ -18,9 +18,11 @@ import numpy
 class PMHistogram(QOpenGLWidget):
     def __init__(self, *args, **kwargs):
         super(PMHistogram, self).__init__(*args, **kwargs)
+        self.pixel_width = 100
+        self.pixel_height = 100
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
-        # counts: sorted list of (bin, count)
+        self.bins = list()
         self.counts = list()
 
     def initializeGL(self):
@@ -30,12 +32,13 @@ class PMHistogram(QOpenGLWidget):
             * not calling link() and bind()
         """
         self.vp.setVersion(2,1)
+        # vertex program scales 0,1 into -1,1
         vertex_program_text = """
         #version 130
         in vec2 position;
 
         void main(){
-            gl_Position = vec4(position.x, position.y, 0, 1.0);
+            gl_Position = vec4(2*position.x-1, 2*position.y-1, 0, 1.0);
         }
         """
         fragment_program_text = """
@@ -58,6 +61,8 @@ class PMHistogram(QOpenGLWidget):
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
         fun.glClearColor(1.0, 1.0, 1.0, 1.0)
         fun.glClear(fun.GL_COLOR_BUFFER_BIT)
+        self.pixel_width = width
+        self.pixel_height = height
 
     def paintGL(self):
         painter = QPainter(self)
@@ -67,10 +72,11 @@ class PMHistogram(QOpenGLWidget):
         fun.glEnable(fun.GL_BLEND)
         fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
         self.shader_program.bind()
+        vertices = self.vertices()
         vertices = numpy.array((
-            (-0.9, 0.9),
-            (-0.9, 0.0),
-            (-0.8, 0.9),))
+            (0.1, 0.9),
+            (0.1, 0.0),
+            (0.05, 0.9),))
         self.shader_program.setAttributeArray(
             'position', vertices)
         self.shader_program.enableAttributeArray('position')
@@ -78,7 +84,33 @@ class PMHistogram(QOpenGLWidget):
         self.shader_program.disableAttributeArray('position')
         painter.endNativePainting()
         painter.fillRect(QRect(75,75,100,100),QBrush(QColor(50,50,255,128)))
+
+    def vertices(self):
+        nbins = len(self.bins)
+        maxcount = max(self.counts)
+        # scale vertices into 0,1 square
+        binwidth = 1.0 / nbins
+        unitheight = 1.0 / maxcount
+        left = numpy.arange(0,1 - 0.1*binwidth, binwidth)
+        right = left + binwidth
+        unflattened_xx = numpy.array(
+            (left, right, left, right, left, right))
+        xx = unflattened_xx.flatten("F")
+        bottom = numpy.zeros(nbins)
+        top = numpy.array(self.counts) * unitheight
+        unflattened_yy = numpy.array(
+            (bottom, bottom, top, bottom, top, top))
+        yy = unflattened_yy.flatten("F")
+        vertices = numpy.array((xx, yy)).T
+        print(vertices)
+        return vertices
+
+    def update_counts(self, bins, counts):
+        self.bins = bins
+        self.counts = counts
+
 qapp = QApplication(sys.argv)
 pm_histogram = PMHistogram()
+pm_histogram.update_counts((0,1), (1, 10))
 pm_histogram.show()
 qapp.exec_()
