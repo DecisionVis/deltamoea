@@ -45,16 +45,6 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
             fragment_program_text)
         self.shader_program.link() # Necessary
         self.shader_program.bind() # Necessary
-        #vertices = numpy.array((
-        #    (-0.5, 0, 0),
-        #    ( 0.5, 0, 0),
-        #    ( 0.0, 0.5 * 2**0.5, 0),))
-        #vertices = numpy.array((
-        #    (0, 0, 0),
-        #    (0, 100, 0),
-        #    (10, 100, 0),))
-        #self.shader_program.setAttributeArray(
-        #    'position', vertices)
 
     def resizeGL(self, width, height):
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
@@ -68,15 +58,11 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
         fun.glEnable(fun.GL_BLEND)
         fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
-        # it doesn't make sense to issue glClear when you're also
-        # doing Qt painting
-        #fun.glClearColor(1.0, 1.0, 1.0, 1.0)
-        #fun.glClear(fun.GL_COLOR_BUFFER_BIT)
         self.shader_program.bind()
         vertices = numpy.array((
-            (-1, 0, 0),
-            (0, 50, 0),
-            (10, 50, 0),))
+            (-0.9, 0.9, 0),
+            (-0.9, 0.0, 0),
+            (-0.8, 0.9, 0),))
         self.shader_program.setAttributeArray(
             'position', vertices)
         self.shader_program.enableAttributeArray('position')
