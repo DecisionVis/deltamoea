@@ -73,14 +73,14 @@ class PMHistogram(QOpenGLWidget):
         fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
         self.shader_program.bind()
         vertices = self.vertices()
-        vertices = numpy.array((
-            (0.1, 0.9),
-            (0.1, 0.0),
-            (0.05, 0.9),))
+        #vertices = numpy.array((
+        #    (0.1, 0.9),
+        #    (0.1, 0.0),
+        #    (0.05, 0.9),))
         self.shader_program.setAttributeArray(
             'position', vertices)
         self.shader_program.enableAttributeArray('position')
-        fun.glDrawArrays(fun.GL_TRIANGLES, 0, 3)
+        fun.glDrawArrays(fun.GL_TRIANGLES, 0, vertices.shape[0])
         self.shader_program.disableAttributeArray('position')
         painter.endNativePainting()
         painter.fillRect(QRect(75,75,100,100),QBrush(QColor(50,50,255,128)))
