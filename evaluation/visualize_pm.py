@@ -15,11 +15,13 @@ from PyQt5.QtCore import Qt
 import sys
 import numpy
 
-class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
+class PMHistogram(QOpenGLWidget):
     def __init__(self, *args, **kwargs):
-        super(HelloTriangle, self).__init__(*args, **kwargs)
+        super(PMHistogram, self).__init__(*args, **kwargs)
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
+        # counts: sorted list of (bin, count)
+        self.counts = list()
 
     def initializeGL(self):
         """
@@ -30,10 +32,10 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         self.vp.setVersion(2,1)
         vertex_program_text = """
         #version 130
-        in vec3 position;
+        in vec2 position;
 
         void main(){
-            gl_Position = vec4(position.x, position.y, position.z, 1.0);
+            gl_Position = vec4(position.x, position.y, 0, 1.0);
         }
         """
         fragment_program_text = """
@@ -49,8 +51,8 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         self.shader_program.addShaderFromSourceCode(
             QOpenGLShader.Fragment,
             fragment_program_text)
-        self.shader_program.link() # Necessary
-        self.shader_program.bind() # Necessary
+        self.shader_program.link()
+        self.shader_program.bind()
 
     def resizeGL(self, width, height):
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
@@ -66,9 +68,9 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
         self.shader_program.bind()
         vertices = numpy.array((
-            (-0.9, 0.9, 0),
-            (-0.9, 0.0, 0),
-            (-0.8, 0.9, 0),))
+            (-0.9, 0.9),
+            (-0.9, 0.0),
+            (-0.8, 0.9),))
         self.shader_program.setAttributeArray(
             'position', vertices)
         self.shader_program.enableAttributeArray('position')
@@ -77,6 +79,6 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         painter.endNativePainting()
         painter.fillRect(QRect(75,75,100,100),QBrush(QColor(50,50,255,128)))
 qapp = QApplication(sys.argv)
-hello_triangle = HelloTriangle()
-hello_triangle.show()
+pm_histogram = PMHistogram()
+pm_histogram.show()
 qapp.exec_()
