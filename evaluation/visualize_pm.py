@@ -7,7 +7,13 @@ from PyQt5.QtGui import QOpenGLShader
 from PyQt5.QtGui import QOpenGLShaderProgram
 from PyQt5.QtGui import QVector3D
 from PyQt5.QtGui import QMatrix4x4
+from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QBrush
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QRect
+from PyQt5.QtCore import Qt
 import sys
+import numpy
 
 class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
     def __init__(self, *args, **kwargs):
@@ -21,15 +27,14 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         in vec3 position;
 
         void main(){
-            gl_Position = vec4(position, 1.0);
+            gl_Position = vec4(position.x, position.y, position.z, 1.0);
         }
         """
-        # rename to fragment_program_text
-        fragment_shader_text = """
+        fragment_program_text = """
         #version 130
 
         void main(){
-            gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+            gl_FragColor = vec4(0.0, 0.5, 0.0, 1.0);
         }
         """
         self.shader_program.addShaderFromSourceCode(
@@ -37,26 +42,46 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
             vertex_program_text)
         self.shader_program.addShaderFromSourceCode(
             QOpenGLShader.Fragment,
-            fragment_shader_text)
+            fragment_program_text)
         self.shader_program.link() # Necessary
         self.shader_program.bind() # Necessary
-        vertices = [ # replace with ndarray
-            QVector3D(-0.5, 0, 0),
-            QVector3D( 0.5, 0, 0),
-            QVector3D( 0.0, 0.5* 2**0.5, 0),]
+        vertices = numpy.array((
+            (-0.5, 0, 0),
+            ( 0.5, 0, 0),
+            ( 0.0, 0.5 * 2**0.5, 0),))
+        vertices = numpy.array((
+            (0, 0, 0),
+            (0, 100, 0),
+            (10, 100, 0),))
         self.shader_program.setAttributeArray(
             'position', vertices)
+
     def resizeGL(self, width, height):
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
         fun.glClearColor(1.0, 1.0, 1.0, 1.0)
         fun.glClear(fun.GL_COLOR_BUFFER_BIT)
+
     def paintGL(self):
+        painter = QPainter(self)
+        painter.fillRect(QRect(0,0,100,100),QBrush(QColor(255,50,50,255)))
+        painter.beginNativePainting()
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
-        fun.glClearColor(1.0, 1.0, 1.0, 1.0)
-        fun.glClear(fun.GL_COLOR_BUFFER_BIT)
+        # it doesn't make sense to issue glClear when you're also
+        # doing Qt painting
+        #fun.glClearColor(1.0, 1.0, 1.0, 1.0)
+        #fun.glClear(fun.GL_COLOR_BUFFER_BIT)
+        #self.shader_program.bind()
+        vertices = numpy.array((
+            (0, 0, 0),
+            (0, 100, 0),
+            (10, 100, 0),))
+        self.shader_program.setAttributeArray(
+            'position', vertices)
         self.shader_program.enableAttributeArray('position')
         fun.glDrawArrays(fun.GL_TRIANGLES, 0, 3)
         self.shader_program.disableAttributeArray('position')
+        painter.endNativePainting()
+        painter.fillRect(QRect(75,75,100,100),QBrush(QColor(50,50,255,255)))
 qapp = QApplication(sys.argv)
 hello_triangle = HelloTriangle()
 hello_triangle.show()
