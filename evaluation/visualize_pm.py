@@ -36,9 +36,14 @@ class PMHistogram(QOpenGLWidget):
         vertex_program_text = """
         #version 130
         in vec2 position;
+        uniform float x_margin;
+        uniform float y_margin;
 
         void main(){
-            gl_Position = vec4(2*position.x-1, 2*position.y-1, 0, 1.0);
+            gl_Position = vec4(
+                (2*position.x-1) * (2.0 - x_margin)/2.0,
+                (2*position.y-1) * (2.0 - y_margin)/2.0,
+                0, 1.0);
         }
         """
         fragment_program_text = """
@@ -63,6 +68,9 @@ class PMHistogram(QOpenGLWidget):
         fun.glClear(fun.GL_COLOR_BUFFER_BIT)
         self.pixel_width = width
         self.pixel_height = height
+        # what's ten pixels as a fraction of two?
+        self.x_margin = 2 * 10.0 / width
+        self.y_margin = 2 * 10.0 / height
 
     def paintGL(self):
         painter = QPainter(self)
@@ -79,6 +87,8 @@ class PMHistogram(QOpenGLWidget):
         #    (0.05, 0.9),))
         self.shader_program.setAttributeArray(
             'position', vertices)
+        self.shader_program.setUniformValue("x_margin", self.x_margin)
+        self.shader_program.setUniformValue("y_margin", self.y_margin)
         self.shader_program.enableAttributeArray('position')
         fun.glDrawArrays(fun.GL_TRIANGLES, 0, vertices.shape[0])
         self.shader_program.disableAttributeArray('position')
