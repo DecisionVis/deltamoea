@@ -34,7 +34,7 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         #version 130
 
         void main(){
-            gl_FragColor = vec4(0.0, 0.5, 0.0, 1.0);
+            gl_FragColor = vec4(0.0, 0.5, 0.0, 0.5);
         }
         """
         self.shader_program.addShaderFromSourceCode(
@@ -66,22 +66,24 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         painter.fillRect(QRect(0,0,100,100),QBrush(QColor(255,50,50,255)))
         painter.beginNativePainting()
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
+        fun.glEnable(fun.GL_BLEND)
+        fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
         # it doesn't make sense to issue glClear when you're also
         # doing Qt painting
         #fun.glClearColor(1.0, 1.0, 1.0, 1.0)
         #fun.glClear(fun.GL_COLOR_BUFFER_BIT)
         self.shader_program.bind()
         vertices = numpy.array((
-            (0, 0, 0),
-            (0, 100, 0),
-            (10, 100, 0),))
+            (-1, 0, 0),
+            (0, 50, 0),
+            (10, 50, 0),))
         self.shader_program.setAttributeArray(
             'position', vertices)
         self.shader_program.enableAttributeArray('position')
         fun.glDrawArrays(fun.GL_TRIANGLES, 0, 3)
         self.shader_program.disableAttributeArray('position')
         painter.endNativePainting()
-        painter.fillRect(QRect(75,75,100,100),QBrush(QColor(50,50,255,255)))
+        painter.fillRect(QRect(75,75,100,100),QBrush(QColor(50,50,255,128)))
 qapp = QApplication(sys.argv)
 hello_triangle = HelloTriangle()
 hello_triangle.show()
