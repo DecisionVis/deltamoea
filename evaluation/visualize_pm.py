@@ -70,13 +70,13 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         # doing Qt painting
         #fun.glClearColor(1.0, 1.0, 1.0, 1.0)
         #fun.glClear(fun.GL_COLOR_BUFFER_BIT)
-        #self.shader_program.bind()
-        vertices = numpy.array((
-            (0, 0, 0),
-            (0, 100, 0),
-            (10, 100, 0),))
-        self.shader_program.setAttributeArray(
-            'position', vertices)
+        self.shader_program.bind()
+        #vertices = numpy.array((
+        #    (0, 0, 0),
+        #    (0, 100, 0),
+        #    (10, 100, 0),))
+        #self.shader_program.setAttributeArray(
+        #    'position', vertices)
         self.shader_program.enableAttributeArray('position')
         fun.glDrawArrays(fun.GL_TRIANGLES, 0, 3)
         self.shader_program.disableAttributeArray('position')
