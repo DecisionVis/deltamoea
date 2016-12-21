@@ -9,6 +9,7 @@ from PyQt5.QtGui import QVector3D
 from PyQt5.QtGui import QMatrix4x4
 from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QBrush
+from PyQt5.QtGui import QPen
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QRect
 from PyQt5.QtCore import Qt
@@ -20,6 +21,8 @@ class PMHistogram(QOpenGLWidget):
         super(PMHistogram, self).__init__(*args, **kwargs)
         self.pixel_width = 100
         self.pixel_height = 100
+        # label_height: pixels to reserve for label
+        self.label_height = 20.0
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
         self.bins = list()
@@ -41,8 +44,8 @@ class PMHistogram(QOpenGLWidget):
 
         void main(){
             gl_Position = vec4(
-                (2*position.x-1) * (2.0 - x_margin)/2.0,
-                (2*position.y-1) * (2.0 - y_margin)/2.0,
+                (2*position.x-1) * (2.0 - x_margin*2.0)/2.0,
+                (2*position.y-1) * (2.0 - y_margin*2.0)/2.0,
                 0, 1.0);
         }
         """
@@ -70,11 +73,17 @@ class PMHistogram(QOpenGLWidget):
         self.pixel_height = height
         # what's ten pixels as a fraction of two?
         self.x_margin = 2 * 10.0 / width
-        self.y_margin = 2 * 10.0 / height
+        self.y_margin = 2 * self.label_height / height
 
     def paintGL(self):
         painter = QPainter(self)
-        painter.fillRect(QRect(0,0,100,100),QBrush(QColor(255,50,50,255)))
+        painter.setPen(QPen(QBrush(QColor(200,200,200)), 2))
+        for ii, bin in enumerate(self.bins):
+            working_width = self.pixel_width - 20
+            pixel_x = int(10 + working_width * ii * 1.0 / (len(self.bins)))
+            painter.drawLine(pixel_x, self.pixel_height - self.label_height,
+                             pixel_x, self.label_height)
+ 
         painter.beginNativePainting()
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
         fun.glEnable(fun.GL_BLEND)
@@ -93,7 +102,19 @@ class PMHistogram(QOpenGLWidget):
         fun.glDrawArrays(fun.GL_TRIANGLES, 0, vertices.shape[0])
         self.shader_program.disableAttributeArray('position')
         painter.endNativePainting()
-        painter.fillRect(QRect(75,75,100,100),QBrush(QColor(50,50,255,128)))
+        painter.setPen(QPen(QBrush(QColor(80,80,80)), 1))
+        step = len(self.bins) // 10
+        ii = 0
+        while ii < len(self.bins):
+            bin = self.bins[ii]
+            ii += step
+            bintext = "{:.2f}".format(bin)
+            # scale 0,1 into widget width minus 20 pixels
+            working_width = self.pixel_width - 20
+            pixel_x = int(10 + bin * working_width)
+            pixel_y = int(self.pixel_height - 8)
+
+            painter.drawText(pixel_x, pixel_y, bintext)
 
     def vertices(self):
         nbins = len(self.bins)
@@ -120,15 +141,16 @@ class PMHistogram(QOpenGLWidget):
 
 qapp = QApplication(sys.argv)
 pm_histogram = PMHistogram()
-counts = dict((b,0) for b in range(101))
+nbins = 200
+counts = dict((b,0) for b in range(nbins+1))
 from moeadv.operators import pm_inner
-operator = pm_inner(0,1,15)
+operator = pm_inner(0,1,100)
 for _ in range(100000):
-    x_child = operator(0.5)
-    counts[int(numpy.floor(x_child*100))] += 1
-bins = list(counts.keys())
+    x_child = operator(0.025)
+    counts[int(numpy.floor(x_child*nbins))] += 1
+bins = sorted(list(counts.keys()))
 counts = [counts[b] for b in bins]
-bins = numpy.array(bins) / 100
+bins = numpy.array(bins) / (nbins + 1.0)
 counts = numpy.array(counts)
 pm_histogram.update_counts(bins, counts)
 pm_histogram.show()
