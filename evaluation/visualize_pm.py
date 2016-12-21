@@ -112,7 +112,6 @@ class PMHistogram(QOpenGLWidget):
             (bottom, bottom, top, bottom, top, top))
         yy = unflattened_yy.flatten("F")
         vertices = numpy.array((xx, yy)).T
-        print(vertices)
         return vertices
 
     def update_counts(self, bins, counts):
@@ -121,6 +120,16 @@ class PMHistogram(QOpenGLWidget):
 
 qapp = QApplication(sys.argv)
 pm_histogram = PMHistogram()
-pm_histogram.update_counts((0,1), (1, 10))
+counts = dict((b,0) for b in range(101))
+from moeadv.operators import pm_inner
+operator = pm_inner(0,1,15)
+for _ in range(100000):
+    x_child = operator(0.5)
+    counts[int(numpy.floor(x_child*100))] += 1
+bins = list(counts.keys())
+counts = [counts[b] for b in bins]
+bins = numpy.array(bins) / 100
+counts = numpy.array(counts)
+pm_histogram.update_counts(bins, counts)
 pm_histogram.show()
 qapp.exec_()
