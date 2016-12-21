@@ -20,7 +20,13 @@ class HelloTriangle(QOpenGLWidget): #rename to PMHistogram
         super(HelloTriangle, self).__init__(*args, **kwargs)
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
+
     def initializeGL(self):
+        """
+        Things that don't work in initializeGL:
+            * setAttributeArray
+            * not calling link() and bind()
+        """
         self.vp.setVersion(2,1)
         vertex_program_text = """
         #version 130
