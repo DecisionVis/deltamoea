@@ -1,5 +1,8 @@
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QOpenGLWidget
+from PyQt5.QtWidgets import QFrame
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtGui import QOpenGLContext
 from PyQt5.QtGui import QOpenGLVersionProfile
 from PyQt5.QtGui import QSurfaceFormat
@@ -15,10 +18,72 @@ from PyQt5.QtCore import QRect
 from PyQt5.QtCore import Qt
 import sys
 import numpy
+import weakref
 
-class PMHistogram(QOpenGLWidget):
+def _return_none():
+    return None
+
+class PMHistogramState(object):
+    def __init__(self, di, x_parent, samples, nbins):
+        self.di = di
+        self.x_parent = x_parent
+        self.samples = samples
+        self.nbins = nbins
+        self._data = _return_none
+        self._counts = _return_none
+
+    def counts(self):
+        """
+        Return (counts, bin_edges) where counts.shape[0] is nbins and
+        bin_edges.shape[0] is nbins+1.
+        """
+        counts = self._counts()
+        if counts is None:
+            data = self._data()
+            if data is None:
+                data = self._sample()
+                self._data = weakref.ref(data)
+            counts = numpy.histogram(data, bins=self.nbins, range=(0.0,1.0))
+            self._counts = weakref.ref(counts)
+        return counts
+
+    def update_di(self, di):
+        """
+        return a new state with the new DI
+        """
+        if di == self.di:
+            return self
+        new_state = PMHistogramState(di, self.x_parent, self.samples, self.nbins)
+        return new_state
+
+    def update_x_parent(self, x_parent):
+        """
+        return a new state with the new parent X
+        """
+        if x_parent == self.x_parent:
+            return self
+        new_state = PMHistogramState(self.di, x_parent, self.samples, self.nbins)
+        return new_state
+
+    def update_samples(self, samples):
+        """ return a new state with the new number of samples """
+        if samples == self.samples:
+            return self
+        new_state = PMHistogramState(self.di, self.x_parent, samples, self.nbins)
+        return new_state
+
+    def update_nbins(self, nbins):
+        """ return a new state with the new number of bins """
+        if nbins == self.nbins:
+            return self
+        new_state = PMHistogramState(self.di, self.x_parent, self.samples, nbins)
+        new_state._data = self._data # means we don't have to resample!
+        return new_state
+
+
+class PMHistogramWidget(QOpenGLWidget):
     def __init__(self, *args, **kwargs):
-        super(PMHistogram, self).__init__(*args, **kwargs)
+        super(PMHistogramWidget, self).__init__(*args, **kwargs)
         self.pixel_width = 100
         self.pixel_height = 100
         # label_height: pixels to reserve for label
@@ -90,10 +155,6 @@ class PMHistogram(QOpenGLWidget):
         fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
         self.shader_program.bind()
         vertices = self.vertices()
-        #vertices = numpy.array((
-        #    (0.1, 0.9),
-        #    (0.1, 0.0),
-        #    (0.05, 0.9),))
         self.shader_program.setAttributeArray(
             'position', vertices)
         self.shader_program.setUniformValue("x_margin", self.x_margin)
@@ -139,8 +200,11 @@ class PMHistogram(QOpenGLWidget):
         self.bins = bins
         self.counts = counts
 
+class OperatorInspectionFrame(QFrame):
+    pass
+
 qapp = QApplication(sys.argv)
-pm_histogram = PMHistogram()
+pm_histogram = PMHistogramWidget()
 nbins = 200
 counts = dict((b,0) for b in range(nbins+1))
 from moeadv.operators import pm_inner
