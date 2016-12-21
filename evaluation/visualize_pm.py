@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QSlider
 from PyQt5.QtGui import QOpenGLContext
 from PyQt5.QtGui import QOpenGLVersionProfile
 from PyQt5.QtGui import QSurfaceFormat
@@ -179,6 +181,16 @@ class PMHistogramWidget(QOpenGLWidget):
 
     def vertices(self):
         nbins = len(self.bins)
+        if nbins == 0:
+            return numpy.array((
+                (0,0),
+                (0,1),
+                (1,1),
+                (1,1),
+                (1,0),
+                (0,0)),
+                dtype=numpy.float64)
+
         maxcount = max(self.counts)
         # scale vertices into 0,1 square
         binwidth = 1.0 / nbins
@@ -201,10 +213,50 @@ class PMHistogramWidget(QOpenGLWidget):
         self.counts = counts
 
 class OperatorInspectionFrame(QFrame):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(OperatorInspectionFrame, self).__init__(*args, **kwargs)
+        # prepare state
+        initial_state = PMHistogramState(15, 0.5, 100000, 100)
+        self.states = [initial_state]
+        self.state_index = 0
+        self.last_state_index = -1
+
+        # prepare layout and sliders
+        self.main_layout = QHBoxLayout(self)         
+        control_panel = QFrame(self)
+        self.main_layout.addWidget(control_panel)
+        self.plot = PMHistogramWidget(self)
+        self.main_layout.addWidget(self.plot)
+
+        # assemble control panel
+        cp_layout = QVBoxLayout(control_panel)
+        cp_layout.addWidget(QLabel("bins"))
+        self.bins_slider = QSlider(Qt.Horizontal, control_panel)
+        cp_layout.addWidget(self.bins_slider)
+        cp_layout.addStretch()
+        self.bins_slider.setMinimum(0)
+        self.bins_slider.setMaximum(100)
+
+    def do(self, transition):
+        self.states = self.states[:self.state_index + 1]
+        # do stuff
+        # self.states.append(new_state)
+        #self.state_index += 1
+
+    def undo(self):
+        if self.state_index > 0:
+            self.state_index -= 1
+
+    def redo(self):
+        if self.state_index + 1 < len(self.states):
+            self.state_index += 1
+
+
 
 qapp = QApplication(sys.argv)
 pm_histogram = PMHistogramWidget()
+oif = OperatorInspectionFrame()
+oif.show()
 nbins = 200
 counts = dict((b,0) for b in range(nbins+1))
 from moeadv.operators import pm_inner
