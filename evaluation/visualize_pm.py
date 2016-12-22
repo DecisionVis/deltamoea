@@ -200,6 +200,24 @@ class PMHistogramWidget(QOpenGLWidget):
             pixel_y = int(self.pixel_height - 8)
             painter.drawText(pixel_x, pixel_y, text)
 
+    def get_picked_bar(self, pixel_x, pixel_y):
+        if pixel_x < 10 or pixel_x > self.pixel_width - 10:
+            return None
+        if pixel_y < self.label_height or pixel_y > self.pixel_height - self.label_height:
+            return None
+        x_scaled = (pixel_x - 10) * 1.0 / (self.pixel_width - 2 * 10)
+        where_lt = numpy.where(self.bin_edges <= x_scaled)[0]
+        if where_lt.size == 0:
+            return None
+        where_gt = numpy.where(self.bin_edges > x_scaled)[0]
+        if where_gt.size == 0:
+            return None
+        last_lt = where_lt[-1]
+        first_gt = where_gt[0]
+        if first_gt - last_lt != 1:
+            return None
+        print("bin is [{}, {})".format(self.bin_edges[last_lt], self.bin_edges[first_gt]))
+
     def vertices(self):
         maxcount = self.counts.max()
         nbins = self.counts.shape[0]
@@ -409,6 +427,9 @@ class OperatorInspectionFrame(QFrame):
                     retaining = retained_samples < 500000
                 else:
                     state.release_data()
+
+        self.plot.get_picked_bar(100,100)
+
 
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
