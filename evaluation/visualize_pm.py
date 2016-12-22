@@ -282,6 +282,16 @@ class OperatorInspectionFrame(QFrame):
             self._samples_to_slider(initial_state.samples))
         self.samples_slider.valueChanged.connect(self._samples_changed)
 
+        self.di_label = QLabel(control_panel)
+        cp_layout.addWidget(self.di_label)
+        self.di_slider = QSlider(Qt.Horizontal, control_panel)
+        cp_layout.addWidget(self.di_slider)
+        self.di_slider.setMinimum(0)
+        self.di_slider.setMaximum(100)
+        self.di_label.setText("di {}".format(initial_state.di))
+        self.di_slider.setValue(initial_state.di)
+        self.di_slider.valueChanged.connect(self._di_changed)
+
         cp_layout.addStretch()
 
         # set up heartbeat
@@ -318,7 +328,7 @@ class OperatorInspectionFrame(QFrame):
         self.do(new_state)
 
     def _samples_to_slider(self, samples):
-        slider = int(10 * numpy.log10(samples)) # use decible-style scaling
+        slider = int(10 * numpy.log10(samples)) # use decibel-style scaling
         return slider
 
     def _slider_to_samples(self, slider):
@@ -329,6 +339,11 @@ class OperatorInspectionFrame(QFrame):
         samples = self._slider_to_samples(slider_position)
         new_state = self.states[self.state_index].update_samples(samples)
         self.samples_label.setText("{} samples".format(samples))
+        self.do(new_state)
+
+    def _di_changed(self, slider_position):
+        new_state = self.states[self.state_index].update_di(slider_position)
+        self.di_label.setText("di {}".format(slider_position))
         self.do(new_state)
 
     def keyReleaseEvent(self, the_event):
@@ -363,6 +378,11 @@ class OperatorInspectionFrame(QFrame):
         self.parent_slider.setValue(
             self._parent_x_to_slider(state.x_parent))
         self.parent_label.setText("x = {:.2f}".format(state.x_parent))
+        self.samples_slider.setValue(
+            self._samples_to_slider(state.samples))
+        self.samples_label.setText("{} samples".format(state.samples))
+        self.di_slider.setValue(state.di)
+        self.di_label.setText("di {}".format(state.di))
 
     def redo(self):
         if self.state_index + 1 < len(self.states):
