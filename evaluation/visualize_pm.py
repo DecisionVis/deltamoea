@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QSlider
+from PyQt5.QtWidgets import QSplitter
 from PyQt5.QtGui import QOpenGLContext
 from PyQt5.QtGui import QOpenGLVersionProfile
 from PyQt5.QtGui import QSurfaceFormat
@@ -21,6 +22,7 @@ from PyQt5.QtCore import Qt
 import sys
 import numpy
 import weakref
+from moeadv.operators import pm_inner
 
 def _return_none():
     return None
@@ -33,6 +35,14 @@ class PMHistogramState(object):
         self.nbins = nbins
         self._data = _return_none
         self._counts = _return_none
+        self._bins = _return_none
+
+    def _sample(self):
+        operator = pm_inner(0.0, 1.0, self.di)
+        vf = numpy.vectorize(operator)
+        starting_data = numpy.ones(self.samples, dtype='f') * self.x_parent
+        samples = vf(starting_data)
+        return samples
 
     def counts(self):
         """
@@ -40,14 +50,16 @@ class PMHistogramState(object):
         bin_edges.shape[0] is nbins+1.
         """
         counts = self._counts()
-        if counts is None:
+        bins = self._bins()
+        if counts is None or bins is None:
             data = self._data()
             if data is None:
                 data = self._sample()
                 self._data = weakref.ref(data)
-            counts = numpy.histogram(data, bins=self.nbins, range=(0.0,1.0))
+            counts, bins = numpy.histogram(data, bins=self.nbins, range=(0.0,1.0))
             self._counts = weakref.ref(counts)
-        return counts
+            self._bins = weakref.ref(bins)
+        return counts, bins
 
     def update_di(self, di):
         """
@@ -84,7 +96,7 @@ class PMHistogramState(object):
 
 
 class PMHistogramWidget(QOpenGLWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, initial_state, *args, **kwargs):
         super(PMHistogramWidget, self).__init__(*args, **kwargs)
         self.pixel_width = 100
         self.pixel_height = 100
@@ -92,8 +104,7 @@ class PMHistogramWidget(QOpenGLWidget):
         self.label_height = 20.0
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
-        self.bins = list()
-        self.counts = list()
+        self.state = initial_state
 
     def initializeGL(self):
         """
@@ -144,10 +155,17 @@ class PMHistogramWidget(QOpenGLWidget):
 
     def paintGL(self):
         painter = QPainter(self)
+        painter.beginNativePainting()
+        fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
+        fun.glClearColor(1.0, 1.0, 1.0, 1.0)
+        fun.glClear(fun.GL_COLOR_BUFFER_BIT)
+        painter.endNativePainting()
         painter.setPen(QPen(QBrush(QColor(200,200,200)), 2))
-        for ii, bin in enumerate(self.bins):
-            working_width = self.pixel_width - 20
-            pixel_x = int(10 + working_width * ii * 1.0 / (len(self.bins)))
+        _, bin_edges = self.state.counts()
+        # here let's assume bin_edges is from 0-1
+        working_width = self.pixel_width - 20
+        for bin_edge in bin_edges:
+            pixel_x = int(10 + working_width * bin_edge)
             painter.drawLine(pixel_x, self.pixel_height - self.label_height,
                              pixel_x, self.label_height)
  
@@ -166,51 +184,41 @@ class PMHistogramWidget(QOpenGLWidget):
         self.shader_program.disableAttributeArray('position')
         painter.endNativePainting()
         painter.setPen(QPen(QBrush(QColor(80,80,80)), 1))
-        step = len(self.bins) // 10
+        limit = bin_edges.shape[0]
+        step = limit // 10
         ii = 0
-        while ii < len(self.bins):
-            bin = self.bins[ii]
+        while ii < limit:
+            bin_edge = bin_edges[ii]
             ii += step
-            bintext = "{:.2f}".format(bin)
-            # scale 0,1 into widget width minus 20 pixels
+            text = "{:.2f}".format(bin_edge)
             working_width = self.pixel_width - 20
-            pixel_x = int(10 + bin * working_width)
+            pixel_x = int(10 + bin_edge * working_width)
             pixel_y = int(self.pixel_height - 8)
-
-            painter.drawText(pixel_x, pixel_y, bintext)
+            painter.drawText(pixel_x, pixel_y, text)
 
     def vertices(self):
-        nbins = len(self.bins)
-        if nbins == 0:
-            return numpy.array((
-                (0,0),
-                (0,1),
-                (1,1),
-                (1,1),
-                (1,0),
-                (0,0)),
-                dtype=numpy.float64)
-
-        maxcount = max(self.counts)
+        counts, bin_edges = self.state.counts()
+        maxcount = counts.max()
+        nbins = counts.shape[0]
         # scale vertices into 0,1 square
-        binwidth = 1.0 / nbins
+        binscale = 1.0 / (bin_edges.max() - bin_edges.min())
         unitheight = 1.0 / maxcount
-        left = numpy.arange(0,1 - 0.1*binwidth, binwidth)
-        right = left + binwidth
+        left = bin_edges[:-1] * binscale
+        right = bin_edges[1:] * binscale
         unflattened_xx = numpy.array(
             (left, right, left, right, left, right))
         xx = unflattened_xx.flatten("F")
         bottom = numpy.zeros(nbins)
-        top = numpy.array(self.counts) * unitheight
+        top = numpy.array(counts) * unitheight
         unflattened_yy = numpy.array(
             (bottom, bottom, top, bottom, top, top))
         yy = unflattened_yy.flatten("F")
         vertices = numpy.array((xx, yy)).T
         return vertices
 
-    def update_counts(self, bins, counts):
-        self.bins = bins
-        self.counts = counts
+    def set_state(self, state):
+    	self.state = state
+    	self.update()
 
 class OperatorInspectionFrame(QFrame):
     def __init__(self, *args, **kwargs):
@@ -222,11 +230,15 @@ class OperatorInspectionFrame(QFrame):
         self.last_state_index = -1
 
         # prepare layout and sliders
-        self.main_layout = QHBoxLayout(self)         
+        main_layout = QHBoxLayout(self)
+        splitter = QSplitter(self)
+        main_layout.addWidget(splitter)
         control_panel = QFrame(self)
-        self.main_layout.addWidget(control_panel)
-        self.plot = PMHistogramWidget(self)
-        self.main_layout.addWidget(self.plot)
+        splitter.addWidget(control_panel)
+        self.plot = PMHistogramWidget(initial_state, self)
+        splitter.addWidget(self.plot)
+        splitter.setStretchFactor(0,1)
+        splitter.setStretchFactor(1,4)
 
         # assemble control panel
         cp_layout = QVBoxLayout(control_panel)
@@ -254,20 +266,20 @@ class OperatorInspectionFrame(QFrame):
 
 
 qapp = QApplication(sys.argv)
-pm_histogram = PMHistogramWidget()
 oif = OperatorInspectionFrame()
 oif.show()
-nbins = 200
-counts = dict((b,0) for b in range(nbins+1))
-from moeadv.operators import pm_inner
-operator = pm_inner(0,1,100)
-for _ in range(100000):
-    x_child = operator(0.025)
-    counts[int(numpy.floor(x_child*nbins))] += 1
-bins = sorted(list(counts.keys()))
-counts = [counts[b] for b in bins]
-bins = numpy.array(bins) / (nbins + 1.0)
-counts = numpy.array(counts)
-pm_histogram.update_counts(bins, counts)
-pm_histogram.show()
+#pm_histogram = PMHistogramWidget()
+#nbins = 100
+#counts = dict((b,0) for b in range(nbins+1))
+#from moeadv.operators import pm_inner
+#operator = pm_inner(0,1,100)
+#for _ in range(100000):
+#    x_child = operator(0.025)
+#    counts[int(numpy.floor(x_child*nbins))] += 1
+#bins = sorted(list(counts.keys()))
+#counts = [counts[b] for b in bins]
+#bins = numpy.array(bins) / (nbins + 1.0)
+#counts = numpy.array(counts)
+#pm_histogram.update_counts(bins, counts)
+#pm_histogram.show()
 qapp.exec_()
