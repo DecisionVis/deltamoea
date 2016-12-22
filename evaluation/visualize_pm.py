@@ -230,7 +230,7 @@ class OperatorInspectionFrame(QFrame):
     def __init__(self, *args, **kwargs):
         super(OperatorInspectionFrame, self).__init__(*args, **kwargs)
         # prepare state
-        initial_state = PMHistogramState(15, 0.5, 100000, 100)
+        initial_state = PMHistogramState(15, 0.5, 10000, 100)
         self.states = [initial_state]
         self.state_index = 0
         self.last_state_index = -1
@@ -271,6 +271,17 @@ class OperatorInspectionFrame(QFrame):
             self._parent_x_to_slider(initial_state.x_parent))
         self.parent_slider.valueChanged.connect(self._x_parent_changed)
 
+        self.samples_label = QLabel(control_panel)
+        cp_layout.addWidget(self.samples_label)
+        self.samples_slider = QSlider(Qt.Horizontal, control_panel)
+        cp_layout.addWidget(self.samples_slider)
+        self.samples_slider.setMinimum(20)
+        self.samples_slider.setMaximum(50)
+        self.samples_label.setText("{} samples".format(initial_state.samples))
+        self.samples_slider.setValue(
+            self._samples_to_slider(initial_state.samples))
+        self.samples_slider.valueChanged.connect(self._samples_changed)
+
         cp_layout.addStretch()
 
         # set up heartbeat
@@ -304,6 +315,20 @@ class OperatorInspectionFrame(QFrame):
         x_parent = self._slider_to_parent_x(slider_position)
         new_state = self.states[self.state_index].update_x_parent(x_parent)
         self.parent_label.setText("x = {:.2f}".format(x_parent))
+        self.do(new_state)
+
+    def _samples_to_slider(self, samples):
+        slider = int(10 * numpy.log10(samples)) # use decible-style scaling
+        return slider
+
+    def _slider_to_samples(self, slider):
+        samples = int(10 ** (slider / 10))
+        return samples
+
+    def _samples_changed(self, slider_position):
+        samples = self._slider_to_samples(slider_position)
+        new_state = self.states[self.state_index].update_samples(samples)
+        self.samples_label.setText("{} samples".format(samples))
         self.do(new_state)
 
     def keyReleaseEvent(self, the_event):
