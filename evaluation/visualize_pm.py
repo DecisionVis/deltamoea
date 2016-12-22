@@ -17,15 +17,12 @@ from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QBrush
 from PyQt5.QtGui import QPen
 from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import QRect
 from PyQt5.QtCore import Qt
 import sys
 import numpy
-import weakref
 from moeadv.operators import pm_inner
-
-def _return_none():
-    return None
 
 class PMHistogramState(object):
     def __init__(self, di, x_parent, samples, nbins):
@@ -33,9 +30,7 @@ class PMHistogramState(object):
         self.x_parent = x_parent
         self.samples = samples
         self.nbins = nbins
-        self._data = _return_none
-        self._counts = _return_none
-        self._bins = _return_none
+        self._data = None # lazy sampling
 
     def _sample(self):
         operator = pm_inner(0.0, 1.0, self.di)
@@ -49,16 +44,9 @@ class PMHistogramState(object):
         Return (counts, bin_edges) where counts.shape[0] is nbins and
         bin_edges.shape[0] is nbins+1.
         """
-        counts = self._counts()
-        bins = self._bins()
-        if counts is None or bins is None:
-            data = self._data()
-            if data is None:
-                data = self._sample()
-                self._data = weakref.ref(data)
-            counts, bins = numpy.histogram(data, bins=self.nbins, range=(0.0,1.0))
-            self._counts = weakref.ref(counts)
-            self._bins = weakref.ref(bins)
+        if self._data is None:
+            self._data = self._sample()
+        counts, bins = numpy.histogram(self._data, bins=self.nbins, range=(0.0, 1.0))
         return counts, bins
 
     def update_di(self, di):
@@ -91,9 +79,8 @@ class PMHistogramState(object):
         if nbins == self.nbins:
             return self
         new_state = PMHistogramState(self.di, self.x_parent, self.samples, nbins)
-        new_state._data = self._data # means we don't have to resample!
+        new_state._data = self._data
         return new_state
-
 
 class PMHistogramWidget(QOpenGLWidget):
     def __init__(self, initial_state, *args, **kwargs):
@@ -161,13 +148,17 @@ class PMHistogramWidget(QOpenGLWidget):
         fun.glClear(fun.GL_COLOR_BUFFER_BIT)
         painter.endNativePainting()
         painter.setPen(QPen(QBrush(QColor(200,200,200)), 2))
-        _, bin_edges = self.state.counts()
+        counts, bin_edges = self.state.counts()
         # here let's assume bin_edges is from 0-1
         working_width = self.pixel_width - 20
-        for bin_edge in bin_edges:
-            pixel_x = int(10 + working_width * bin_edge)
-            painter.drawLine(pixel_x, self.pixel_height - self.label_height,
-                             pixel_x, self.label_height)
+        working_height = self.pixel_height - 2 * self.label_height
+        pixel_y_0 = self.pixel_height - self.label_height
+        if working_width * 1.0 / len(bin_edges) >= 5:
+            # don't bother if < 5 pixels wide
+            for ii, bin_edge in enumerate(bin_edges):
+                pixel_x = int(10 + working_width * bin_edge)
+                painter.drawLine(pixel_x, pixel_y_0,
+                                 pixel_x, self.label_height)
  
         painter.beginNativePainting()
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
@@ -247,7 +238,7 @@ class OperatorInspectionFrame(QFrame):
         self.bins_slider = QSlider(Qt.Horizontal, control_panel)
         cp_layout.addWidget(self.bins_slider)
         cp_layout.addStretch()
-        self.bins_slider.setMinimum(0)
+        self.bins_slider.setMinimum(4)
         self.bins_slider.setMaximum(100)
         self.bins_label.setText("{} bins".format(initial_state.nbins))
         self.bins_slider.setValue(
@@ -255,7 +246,9 @@ class OperatorInspectionFrame(QFrame):
         self.bins_slider.valueChanged.connect(self._nbins_changed)
 
         # set up heartbeat
-        # connect heartbeat to updating plot state
+        self.heartbeat = QTimer()
+        self.heartbeat.timeout.connect(self.poll)
+        self.heartbeat.start(100)
 
     def _bin_slider_to_nbins(self, bin_slider_position):
         nbins = bin_slider_position ** 2
@@ -272,9 +265,13 @@ class OperatorInspectionFrame(QFrame):
         self.do(new_state)
 
     def do(self, state):
-        self.states = self.states[:self.state_index + 1]
-        self.states.append(state)
-        self.state_index += 1
+        if self.state_index == self.last_state_index:
+            self.states = self.states[:self.state_index + 1]
+            self.states.append(state)
+            self.state_index += 1
+        else:
+            # overwrite the unused state
+            self.states[self.state_index] = state
 
     def undo(self):
         if self.state_index > 0:
@@ -283,6 +280,11 @@ class OperatorInspectionFrame(QFrame):
     def redo(self):
         if self.state_index + 1 < len(self.states):
             self.state_index += 1
+
+    def poll(self):
+        if self.last_state_index != self.state_index:
+            self.plot.set_state(self.states[self.state_index])
+            self.last_state_index = self.state_index
 
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
