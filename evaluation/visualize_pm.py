@@ -149,6 +149,7 @@ class PMHistogramWidget(QOpenGLWidget):
         painter.endNativePainting()
         painter.setPen(QPen(QBrush(QColor(200,200,200)), 2))
         counts, bin_edges = self.state.counts()
+        maxcount = counts.max()
         # here let's assume bin_edges is from 0-1
         working_width = self.pixel_width - 20
         working_height = self.pixel_height - 2 * self.label_height
@@ -156,9 +157,17 @@ class PMHistogramWidget(QOpenGLWidget):
         if working_width * 1.0 / len(bin_edges) >= 5:
             # don't bother if < 5 pixels wide
             for ii, bin_edge in enumerate(bin_edges):
+                if ii == 0:
+                    count = counts[0]
+                elif ii == len(counts):
+                    count = counts[-1]
+                else:
+                    count = max(counts[ii-1], counts[ii])
+                bar_height = count * 1.0 / maxcount
+                pixel_y = working_height * (1-bar_height) + self.label_height
                 pixel_x = int(10 + working_width * bin_edge)
                 painter.drawLine(pixel_x, pixel_y_0,
-                                 pixel_x, self.label_height)
+                                 pixel_x, pixel_y)
  
         painter.beginNativePainting()
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
