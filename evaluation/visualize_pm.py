@@ -217,8 +217,8 @@ class PMHistogramWidget(QOpenGLWidget):
         return vertices
 
     def set_state(self, state):
-    	self.state = state
-    	self.update()
+        self.state = state
+        self.update()
 
 class OperatorInspectionFrame(QFrame):
     def __init__(self, *args, **kwargs):
@@ -242,18 +242,39 @@ class OperatorInspectionFrame(QFrame):
 
         # assemble control panel
         cp_layout = QVBoxLayout(control_panel)
-        cp_layout.addWidget(QLabel("bins"))
+        self.bins_label = QLabel(control_panel)
+        cp_layout.addWidget(self.bins_label)
         self.bins_slider = QSlider(Qt.Horizontal, control_panel)
         cp_layout.addWidget(self.bins_slider)
         cp_layout.addStretch()
         self.bins_slider.setMinimum(0)
         self.bins_slider.setMaximum(100)
+        self.bins_label.setText("{} bins".format(initial_state.nbins))
+        self.bins_slider.setValue(
+            self._nbins_to_bin_slider(initial_state.nbins))
+        self.bins_slider.valueChanged.connect(self._nbins_changed)
 
-    def do(self, transition):
+        # set up heartbeat
+        # connect heartbeat to updating plot state
+
+    def _bin_slider_to_nbins(self, bin_slider_position):
+        nbins = bin_slider_position ** 2
+        return nbins
+
+    def _nbins_to_bin_slider(self, nbins):
+        bin_slider_position = int(nbins ** 0.5)
+        return bin_slider_position
+
+    def _nbins_changed(self, bin_slider_position):
+        nbins = self._bin_slider_to_nbins(bin_slider_position)
+        new_state = self.states[self.state_index].update_nbins(nbins)
+        self.bins_label.setText("{} bins".format(nbins))
+        self.do(new_state)
+
+    def do(self, state):
         self.states = self.states[:self.state_index + 1]
-        # do stuff
-        # self.states.append(new_state)
-        #self.state_index += 1
+        self.states.append(state)
+        self.state_index += 1
 
     def undo(self):
         if self.state_index > 0:
@@ -263,23 +284,7 @@ class OperatorInspectionFrame(QFrame):
         if self.state_index + 1 < len(self.states):
             self.state_index += 1
 
-
-
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
 oif.show()
-#pm_histogram = PMHistogramWidget()
-#nbins = 100
-#counts = dict((b,0) for b in range(nbins+1))
-#from moeadv.operators import pm_inner
-#operator = pm_inner(0,1,100)
-#for _ in range(100000):
-#    x_child = operator(0.025)
-#    counts[int(numpy.floor(x_child*nbins))] += 1
-#bins = sorted(list(counts.keys()))
-#counts = [counts[b] for b in bins]
-#bins = numpy.array(bins) / (nbins + 1.0)
-#counts = numpy.array(counts)
-#pm_histogram.update_counts(bins, counts)
-#pm_histogram.show()
 qapp.exec_()
