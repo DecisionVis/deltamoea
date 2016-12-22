@@ -371,8 +371,4 @@ class OperatorInspectionFrame(QFrame):
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
 oif.show()
-for binding in QKeySequence.keyBindings(QKeySequence.Undo):
-    print(binding.toString())
-for binding in QKeySequence.keyBindings(QKeySequence.Redo):
-    print(binding.toString())
 qapp.exec_()
