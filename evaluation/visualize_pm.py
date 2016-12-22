@@ -30,7 +30,7 @@ class PMHistogramState(object):
         self.x_parent = x_parent
         self.samples = samples
         self.nbins = nbins
-        self._data = None # lazy sampling
+        self.data = None # lazy sampling
 
     def _sample(self):
         operator = pm_inner(0.0, 1.0, self.di)
@@ -44,9 +44,9 @@ class PMHistogramState(object):
         Return (counts, bin_edges) where counts.shape[0] is nbins and
         bin_edges.shape[0] is nbins+1.
         """
-        if self._data is None:
-            self._data = self._sample()
-        counts, bins = numpy.histogram(self._data, bins=self.nbins, range=(0.0, 1.0))
+        if self.data is None:
+            self.data = self._sample()
+        counts, bins = numpy.histogram(self.data, bins=self.nbins, range=(0.0, 1.0))
         return counts, bins
 
     def update_di(self, di):
@@ -79,8 +79,12 @@ class PMHistogramState(object):
         if nbins == self.nbins:
             return self
         new_state = PMHistogramState(self.di, self.x_parent, self.samples, nbins)
-        new_state._data = self._data
+        new_state.data = self.data
         return new_state
+
+    def release_data(self):
+        """ stop holding a reference to the data """
+        self.data = None
 
 class PMHistogramWidget(QOpenGLWidget):
     def __init__(self, initial_state, *args, **kwargs):
@@ -164,7 +168,8 @@ class PMHistogramWidget(QOpenGLWidget):
                 else:
                     count = max(counts[ii-1], counts[ii])
                 bar_height = count * 1.0 / maxcount
-                pixel_y = working_height * (1-bar_height) + self.label_height
+                # plus 1 to correct for line width of 2
+                pixel_y = working_height * (1-bar_height) + self.label_height + 1
                 pixel_x = int(10 + working_width * bin_edge)
                 painter.drawLine(pixel_x, pixel_y_0,
                                  pixel_x, pixel_y)
@@ -242,17 +247,30 @@ class OperatorInspectionFrame(QFrame):
 
         # assemble control panel
         cp_layout = QVBoxLayout(control_panel)
+
         self.bins_label = QLabel(control_panel)
         cp_layout.addWidget(self.bins_label)
         self.bins_slider = QSlider(Qt.Horizontal, control_panel)
         cp_layout.addWidget(self.bins_slider)
-        cp_layout.addStretch()
         self.bins_slider.setMinimum(4)
         self.bins_slider.setMaximum(100)
         self.bins_label.setText("{} bins".format(initial_state.nbins))
         self.bins_slider.setValue(
             self._nbins_to_bin_slider(initial_state.nbins))
         self.bins_slider.valueChanged.connect(self._nbins_changed)
+
+        self.parent_label = QLabel(control_panel)
+        cp_layout.addWidget(self.parent_label)
+        self.parent_slider = QSlider(Qt.Horizontal, control_panel)
+        cp_layout.addWidget(self.parent_slider)
+        self.parent_slider.setMinimum(0)
+        self.parent_slider.setMaximum(100)
+        self.parent_label.setText("x = {:.2f}".format(initial_state.x_parent))
+        self.parent_slider.setValue(
+            self._parent_x_to_slider(initial_state.x_parent))
+        self.parent_slider.valueChanged.connect(self._x_parent_changed)
+
+        cp_layout.addStretch()
 
         # set up heartbeat
         self.heartbeat = QTimer()
@@ -271,6 +289,20 @@ class OperatorInspectionFrame(QFrame):
         nbins = self._bin_slider_to_nbins(bin_slider_position)
         new_state = self.states[self.state_index].update_nbins(nbins)
         self.bins_label.setText("{} bins".format(nbins))
+        self.do(new_state)
+
+    def _parent_x_to_slider(self, x_parent):
+        slider = int(100 * x_parent)
+        return slider
+
+    def _slider_to_parent_x(self, slider):
+        x_parent = 0.01 * slider
+        return x_parent
+
+    def _x_parent_changed(self, slider_position):
+        x_parent = self._slider_to_parent_x(slider_position)
+        new_state = self.states[self.state_index].update_x_parent(x_parent)
+        self.parent_label.setText("x = {:.2f}".format(x_parent))
         self.do(new_state)
 
     def do(self, state):
@@ -294,6 +326,23 @@ class OperatorInspectionFrame(QFrame):
         if self.last_state_index != self.state_index:
             self.plot.set_state(self.states[self.state_index])
             self.last_state_index = self.state_index
+
+            # release old data if needed
+            ii = self.state_index
+            data = self.states[ii].data
+            retained_samples = 0
+            retaining = True
+            while ii > 0:
+                ii -= 1
+                state = self.states[ii]
+                if retaining:
+                    if data is state.data:
+                        continue
+                    retained_samples += state.data.size
+                    data = state.data
+                    retaining = retained_samples < 500000
+                else:
+                    state.release_data()
 
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
