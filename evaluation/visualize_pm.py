@@ -17,6 +17,7 @@ from PyQt5.QtGui import QPainter
 from PyQt5.QtGui import QBrush
 from PyQt5.QtGui import QPen
 from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import QRect
 from PyQt5.QtCore import Qt
@@ -305,6 +306,16 @@ class OperatorInspectionFrame(QFrame):
         self.parent_label.setText("x = {:.2f}".format(x_parent))
         self.do(new_state)
 
+    def keyReleaseEvent(self, the_event):
+        if the_event.matches(QKeySequence.Undo):
+            the_event.accept()
+            self.undo()
+        elif the_event.matches(QKeySequence.Redo):
+            the_event.accept()
+            self.redo()
+        else:
+            super(OperatorInspectionFrame, self).keyReleaseEvent(the_event)
+
     def do(self, state):
         if self.state_index == self.last_state_index:
             self.states = self.states[:self.state_index + 1]
@@ -317,10 +328,21 @@ class OperatorInspectionFrame(QFrame):
     def undo(self):
         if self.state_index > 0:
             self.state_index -= 1
+            self.update_gui()
+
+    def update_gui(self):
+        state = self.states[self.state_index]
+        self.bins_slider.setValue(
+            self._nbins_to_bin_slider(state.nbins))
+        self.bins_label.setText("{} bins".format(state.nbins))
+        self.parent_slider.setValue(
+            self._parent_x_to_slider(state.x_parent))
+        self.parent_label.setText("x = {:.2f}".format(state.x_parent))
 
     def redo(self):
         if self.state_index + 1 < len(self.states):
             self.state_index += 1
+            self.update_gui()
 
     def poll(self):
         if self.last_state_index != self.state_index:
@@ -338,6 +360,8 @@ class OperatorInspectionFrame(QFrame):
                 if retaining:
                     if data is state.data:
                         continue
+                    if state.data is None:
+                        continue
                     retained_samples += state.data.size
                     data = state.data
                     retaining = retained_samples < 500000
@@ -347,4 +371,8 @@ class OperatorInspectionFrame(QFrame):
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
 oif.show()
+for binding in QKeySequence.keyBindings(QKeySequence.Undo):
+    print(binding.toString())
+for binding in QKeySequence.keyBindings(QKeySequence.Redo):
+    print(binding.toString())
 qapp.exec_()
