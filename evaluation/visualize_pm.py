@@ -96,7 +96,7 @@ class PMHistogramWidget(QOpenGLWidget):
         self.label_height = 20.0
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
-        self.state = initial_state
+        self.counts, self.bin_edges = initial_state.counts()
 
     def initializeGL(self):
         """
@@ -153,27 +153,25 @@ class PMHistogramWidget(QOpenGLWidget):
         fun.glClear(fun.GL_COLOR_BUFFER_BIT)
         painter.endNativePainting()
         painter.setPen(QPen(QBrush(QColor(200,200,200)), 2))
-        counts, bin_edges = self.state.counts()
-        maxcount = counts.max()
+        maxcount = self.counts.max()
         # here let's assume bin_edges is from 0-1
         working_width = self.pixel_width - 20
         working_height = self.pixel_height - 2 * self.label_height
         pixel_y_0 = self.pixel_height - self.label_height
-        if working_width * 1.0 / len(bin_edges) >= 5:
+        if working_width * 1.0 / len(self.bin_edges) >= 5:
             # don't bother if < 5 pixels wide
-            for ii, bin_edge in enumerate(bin_edges):
+            for ii, bin_edge in enumerate(self.bin_edges):
                 if ii == 0:
-                    count = counts[0]
-                elif ii == len(counts):
-                    count = counts[-1]
+                    count = self.counts[0]
+                elif ii == len(self.counts):
+                    count = self.counts[-1]
                 else:
-                    count = max(counts[ii-1], counts[ii])
+                    count = max(self.counts[ii-1], self.counts[ii])
                 bar_height = count * 1.0 / maxcount
                 # plus 1 to correct for line width of 2
                 pixel_y = working_height * (1-bar_height) + self.label_height + 1
                 pixel_x = int(10 + working_width * bin_edge)
-                painter.drawLine(pixel_x, pixel_y_0,
-                                 pixel_x, pixel_y)
+                painter.drawLine(pixel_x, pixel_y_0, pixel_x, pixel_y)
  
         painter.beginNativePainting()
         fun = QOpenGLContext.currentContext().versionFunctions(self.vp)
@@ -190,11 +188,11 @@ class PMHistogramWidget(QOpenGLWidget):
         self.shader_program.disableAttributeArray('position')
         painter.endNativePainting()
         painter.setPen(QPen(QBrush(QColor(80,80,80)), 1))
-        limit = bin_edges.shape[0]
+        limit = self.bin_edges.shape[0]
         step = limit // 10
         ii = 0
         while ii < limit:
-            bin_edge = bin_edges[ii]
+            bin_edge = self.bin_edges[ii]
             ii += step
             text = "{:.2f}".format(bin_edge)
             working_width = self.pixel_width - 20
@@ -203,19 +201,18 @@ class PMHistogramWidget(QOpenGLWidget):
             painter.drawText(pixel_x, pixel_y, text)
 
     def vertices(self):
-        counts, bin_edges = self.state.counts()
-        maxcount = counts.max()
-        nbins = counts.shape[0]
+        maxcount = self.counts.max()
+        nbins = self.counts.shape[0]
         # scale vertices into 0,1 square
-        binscale = 1.0 / (bin_edges.max() - bin_edges.min())
+        binscale = 1.0 / (self.bin_edges.max() - self.bin_edges.min())
         unitheight = 1.0 / maxcount
-        left = bin_edges[:-1] * binscale
-        right = bin_edges[1:] * binscale
+        left = self.bin_edges[:-1] * binscale
+        right = self.bin_edges[1:] * binscale
         unflattened_xx = numpy.array(
             (left, right, left, right, left, right))
         xx = unflattened_xx.flatten("F")
         bottom = numpy.zeros(nbins)
-        top = numpy.array(counts) * unitheight
+        top = numpy.array(self.counts) * unitheight
         unflattened_yy = numpy.array(
             (bottom, bottom, top, bottom, top, top))
         yy = unflattened_yy.flatten("F")
@@ -223,7 +220,7 @@ class PMHistogramWidget(QOpenGLWidget):
         return vertices
 
     def set_state(self, state):
-        self.state = state
+        self.counts, self.bin_edges = state.counts()
         self.update()
 
 class OperatorInspectionFrame(QFrame):
