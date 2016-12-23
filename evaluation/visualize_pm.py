@@ -217,7 +217,16 @@ class PMHistogramWidget(QOpenGLWidget):
         first_gt = where_gt[0]
         if first_gt - last_lt != 1:
             return None
-        return (self.bin_edges[last_lt], self.bin_edges[first_gt])
+        # return last_lt here if you don't like the "only on the bin" feature
+        # implemented below
+        count = self.counts[last_lt]
+        y_scaled = 1 - count / self.counts.max()
+        y_offset = y_scaled * (self.pixel_height - 2 * self.label_height)
+        # the 0.05 is so that you can inspect low-count bins
+        pixel_y_min = self.label_height + y_offset - 0.05 * self.pixel_height
+        if pixel_y < pixel_y_min:
+            return None
+        return last_lt
 
     def mouseMoveEvent(self, the_event):
         the_event.accept()
@@ -225,6 +234,8 @@ class PMHistogramWidget(QOpenGLWidget):
         pixel_x = pos.x()
         pixel_y = pos.y()
         self.selected_bin = self.get_picked_bar(pixel_x, pixel_y)
+        if self.selected_bin is not None:
+            print(self.counts[self.selected_bin])
 
     def vertices(self):
         maxcount = self.counts.max()
