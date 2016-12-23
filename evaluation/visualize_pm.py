@@ -97,6 +97,8 @@ class PMHistogramWidget(QOpenGLWidget):
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
         self.counts, self.bin_edges = initial_state.counts()
+        self.selected_bin = None
+        self.setMouseTracking(True)
 
     def initializeGL(self):
         """
@@ -179,8 +181,7 @@ class PMHistogramWidget(QOpenGLWidget):
         fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
         self.shader_program.bind()
         vertices = self.vertices()
-        self.shader_program.setAttributeArray(
-            'position', vertices)
+        self.shader_program.setAttributeArray('position', vertices)
         self.shader_program.setUniformValue("x_margin", self.x_margin)
         self.shader_program.setUniformValue("y_margin", self.y_margin)
         self.shader_program.enableAttributeArray('position')
@@ -216,7 +217,14 @@ class PMHistogramWidget(QOpenGLWidget):
         first_gt = where_gt[0]
         if first_gt - last_lt != 1:
             return None
-        print("bin is [{}, {})".format(self.bin_edges[last_lt], self.bin_edges[first_gt]))
+        return (self.bin_edges[last_lt], self.bin_edges[first_gt])
+
+    def mouseMoveEvent(self, the_event):
+        the_event.accept()
+        pos = the_event.pos()
+        pixel_x = pos.x()
+        pixel_y = pos.y()
+        self.selected_bin = self.get_picked_bar(pixel_x, pixel_y)
 
     def vertices(self):
         maxcount = self.counts.max()
@@ -429,7 +437,6 @@ class OperatorInspectionFrame(QFrame):
                     state.release_data()
 
         self.plot.get_picked_bar(100,100)
-
 
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
