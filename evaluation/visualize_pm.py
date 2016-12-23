@@ -208,6 +208,13 @@ class PMHistogramWidget(QOpenGLWidget):
             pixel_x = int(10 + bin_edge * working_width)
             pixel_y = int(self.pixel_height - 8)
             painter.drawText(pixel_x, pixel_y, text)
+        if 0 <= self.selected_bin <= self.counts.shape[0]:
+            painter.drawText(10, 20, "Selected Bin")
+            painter.drawText(10, 35, "[{:.4f},{:.4f})".format(
+                self.bin_edges[self.selected_bin],
+                self.bin_edges[self.selected_bin + 1]))
+            painter.drawText(10, 50, "{}%".format(
+                self.counts[self.selected_bin] * 100.0 / self.counts.sum()))
 
     def get_picked_bar(self, pixel_x, pixel_y):
         if pixel_x < 10 or pixel_x > self.pixel_width - 10:
@@ -245,9 +252,6 @@ class PMHistogramWidget(QOpenGLWidget):
         self.selected_bin = self.get_picked_bar(pixel_x, pixel_y)
         if self.selected_bin != old_selected_bin:
             self.update()
-            if self.selected_bin >= 0:
-                print(self.counts[self.selected_bin])
-
 
     def vertices(self):
         maxcount = self.counts.max()
@@ -271,12 +275,12 @@ class PMHistogramWidget(QOpenGLWidget):
         unflattened_zz = numpy.array(
             (sel, sel, sel, sel, sel, sel))
         zz = unflattened_zz.flatten("F")
-        print(zz)
         vertices = numpy.array((xx, yy, zz)).T
         return vertices
 
     def set_state(self, state):
         self.counts, self.bin_edges = state.counts()
+        self.selected_bin = -1
         self.update()
 
 class OperatorInspectionFrame(QFrame):
