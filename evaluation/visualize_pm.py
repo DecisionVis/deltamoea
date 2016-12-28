@@ -470,8 +470,6 @@ class OperatorInspectionFrame(QFrame):
                 else:
                     state.release_data()
 
-        self.plot.get_picked_bar(100,100)
-
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
 oif.show()
