@@ -50,17 +50,28 @@ def sbx_inner(x_lower, x_upper, di):
     x_upper (float): upper bound on DV
     di (float, nonnegative): distribution index
     """
-
+    x_range = x_upper - x_lower
+    if x_range <= 0:
+        raise Exception(
+            "Cannot define PM for non-positive range {} to {}".format(
+                x_lower, x_upper))
+    gamma = di + 1.0
+    kappa = 1.0 / gamma
     """
     1. Create a random number `u` between 0 and 1.
-    2. Find a parameter β_q using a polynomial probability
+    2.
+
+    Let gamma = η_c+1
+    Let kappa = 1/gamma
+
+    Find a parameter β_q using a polynomial probability
     distribution, developed in [Deb and Agrawal 1995] from a
     schema processing point of view, as follows:
 
-    β_q = (uα)^\frac{1}{η_c+1} if u <= 1/α
-    β_q = \frac{1}{2-uα}^\frac{1}{η_c+1} otherwise
+    β_q = (uα)^kappa if u <= 1/α
+    β_q = \frac{1}{2-uα}^kappa otherwise
 
-    where α = 2 - β^{-(η_c+1)}
+    where α = 2 - β^{-gamma}
     and β = 1 + \frac{2}{y_2-y_1}min[(y_1-y_l),(y_u-y_2)]
 
     Here, the parameter y is assumed t vary in [y_l, y_u].
