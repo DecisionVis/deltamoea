@@ -115,3 +115,4 @@ def sbx_inner(x_lower, x_upper, di):
         """
         y_child = 0.5 * ((y_1 + y_2) + sign * beta_q * delta)
         return y_child
+    return operator
