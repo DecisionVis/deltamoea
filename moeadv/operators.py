@@ -51,47 +51,67 @@ def sbx_inner(x_lower, x_upper, di):
     di (float, nonnegative): distribution index
     """
     x_range = x_upper - x_lower
-    if x_range <= 0:
+    if x_range <= 0.0:
         raise Exception(
             "Cannot define PM for non-positive range {} to {}".format(
                 x_lower, x_upper))
+    """
+    * Let gamma = η_c+1
+    * Let kappa = 1/gamma
+    """
     gamma = di + 1.0
     kappa = 1.0 / gamma
     def operator(x_parent1, x_parent2):
+        """
+        Transform parents into normalized coordinates as follows.
+        * if x_parent1 < x_parent2
+            * y_1 = (x_parent1 - x_lower) / x_range
+            * y_2 = (x_parent2 - x_lower) / x_range
+        * otherwise
+            * y_2 = (x_parent1 - x_lower) / x_range
+            * y_1 = (x_parent2 - x_lower) / x_range
+        """
+        if x_parent1 < x_parent2:
+            y_1 = (x_parent1 - x_lower) / x_range
+            y_2 = (x_parent2 - x_lower) / x_range
+        else:
+            y_2 = (x_parent1 - x_lower) / x_range
+            y_1 = (x_parent2 - x_lower) / x_range
 
-    """
-    1.
-    * Let uniform_1 be a sample from the uniform random variate on [0,1].
-
-    2.
-    * Let gamma = η_c+1
-    * Let kappa = 1/gamma
-
-    Transform parents into normalized coordinates as follows.
-
-    * if x_parent1 < x_parent2
-        * y_1 = (x_parent1 - x_lower) / x_range
-        * y_2 = (x_parent2 - x_lower) / x_range
-    * otherwise
-        * y_2 = (x_parent1 - x_lower) / x_range
-        * y_1 = (x_parent2 - x_lower) / x_range
-
-    * Let delta = y_2 - y_1
-    * Let α = 2 - β^{-gamma}
-    * Let β = 1 + (2/delta) * min(y_1, 1-y_2)
-    * if uniform_1 <= 1/α
-        * β_q = (u*α)^kappa
-    * otherwise
-        * β_q = (1 / (2 - u*α))^kappa
-
-    Here, the parameter y is assumed to vary in [0,1].
-
-    3.
-    Let uniform_2 be another sample from the uniform random variate on [0,1].
-    If uniform_2 <= 0.5,
-    let sign = -1
-    otherwise let sign = 1.
-
-    y_child = 0.5[(y_1+y_2) + sign * β_q * delta]
-    """
-
+        """
+        * Let delta = y_2 - y_1
+        * Let β = 1 + (2/delta) * min(y_1, 1-y_2)
+        * Let α = 2 - β^{-gamma}
+        """
+        delta = y_2 - y_1
+        beta = 1.0 + (2.0/delta) * min(y_1, 1-y_2)
+        alpha = 2.0 - beta ** (-gamma)
+        """
+        * Let uniform_1 be a sample from the uniform random variate on [0,1].
+        * if uniform_1 <= 1/α
+            * β_q = (u*α)^kappa
+        * otherwise
+            * β_q = (1 / (2 - u*α))^kappa
+        """
+        uniform_1 = random.random()
+        if uniform_1 <= 1.0 / alpha:
+            beta_q = (uniform_1 * alpha) ** kappa
+        else:
+            beta_q = (1.0 / (2.0 - uniform_1 * alpha)) ** kappa
+        """
+        To determine which parent the child favors:
+        * Let uniform_2 be another sample from the uniform random variate on [0,1].
+        * If uniform_2 <= 0.5,
+        * let sign = -1
+        * otherwise let sign = 1.
+        """
+        uniform_2 = random.random()
+        if uniform_2 <= 0.5:
+            sign = -1.0
+        else:
+            sign = 1.0
+        """
+        y_child = 0.5[(y_1+y_2) + sign * β_q * delta]
+        """
+        y_child = 0.5 * ((y_1 + y_2) + sign * beta_q * delta)
+        return y_child
