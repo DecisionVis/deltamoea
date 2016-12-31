@@ -23,21 +23,23 @@ from PyQt5.QtCore import QRect
 from PyQt5.QtCore import Qt
 import sys
 import numpy
-from moeadv.operators import pm_inner
+from moeadv.operators import sbx_inner
 
-class PMHistogramState(object):
-    def __init__(self, di, x_parent, samples, nbins):
+class SBXHistogramState(object):
+    def __init__(self, di, x_parent1, x_parent2, samples, nbins):
         self.di = di
-        self.x_parent = x_parent
+        self.x_parent1 = x_parent1
+        self.x_parent2 = x_parent2
         self.samples = samples
         self.nbins = nbins
         self.data = None # lazy sampling
 
     def _sample(self):
-        operator = pm_inner(0.0, 1.0, self.di)
+        operator = sbx_inner(0.0, 1.0, self.di)
         vf = numpy.vectorize(operator)
-        starting_data = numpy.ones(self.samples, dtype='f') * self.x_parent
-        samples = vf(starting_data)
+        x_parent1 = numpy.ones(self.samples, dtype='f') * self.x_parent1
+        x_parent2 = numpy.ones(self.samples, dtype='f') * self.x_parent2
+        samples = vf(x_parent1, x_parent2)
         return samples
 
     def counts(self):
@@ -56,30 +58,44 @@ class PMHistogramState(object):
         """
         if di == self.di:
             return self
-        new_state = PMHistogramState(di, self.x_parent, self.samples, self.nbins)
+        new_state = SBXHistogramState(
+            di, self.x_parent1, self.x_parent2, self.samples, self.nbins)
         return new_state
 
-    def update_x_parent(self, x_parent):
+    def update_x_parent1(self, x_parent1):
         """
         return a new state with the new parent X
         """
-        if x_parent == self.x_parent:
+        if x_parent1 == self.x_parent1:
             return self
-        new_state = PMHistogramState(self.di, x_parent, self.samples, self.nbins)
+        new_state = SBXHistogramState(
+            self.di, x_parent1, self.x_parent2, self.samples, self.nbins)
+        return new_state
+
+    def update_x_parent2(self, x_parent2):
+        """
+        return a new state with the new parent X
+        """
+        if x_parent2 == self.x_parent2:
+            return self
+        new_state = SBXHistogramState(
+            self.di, self.x_parent1, x_parent2, self.samples, self.nbins)
         return new_state
 
     def update_samples(self, samples):
         """ return a new state with the new number of samples """
         if samples == self.samples:
             return self
-        new_state = PMHistogramState(self.di, self.x_parent, samples, self.nbins)
+        new_state = SBXHistogramState(
+            self.di, self.x_parent1, self.x_parent2, samples, self.nbins)
         return new_state
 
     def update_nbins(self, nbins):
         """ return a new state with the new number of bins """
         if nbins == self.nbins:
             return self
-        new_state = PMHistogramState(self.di, self.x_parent, self.samples, nbins)
+        new_state = SBXHistogramState(
+            self.di, self.x_parent1, self.x_parent2, self.samples, nbins)
         new_state.data = self.data
         return new_state
 
@@ -87,9 +103,9 @@ class PMHistogramState(object):
         """ stop holding a reference to the data """
         self.data = None
 
-class PMHistogramWidget(QOpenGLWidget):
+class SBXHistogramWidget(QOpenGLWidget):
     def __init__(self, initial_state, *args, **kwargs):
-        super(PMHistogramWidget, self).__init__(*args, **kwargs)
+        super(SBXHistogramWidget, self).__init__(*args, **kwargs)
         self.pixel_width = 100
         self.pixel_height = 100
         # label_height: pixels to reserve for label
@@ -287,7 +303,7 @@ class OperatorInspectionFrame(QFrame):
     def __init__(self, *args, **kwargs):
         super(OperatorInspectionFrame, self).__init__(*args, **kwargs)
         # prepare state
-        initial_state = PMHistogramState(15, 0.5, 10000, 16)
+        initial_state = SBXHistogramState(15, 0.25, 0.75, 10000, 16)
         self.states = [initial_state]
         self.state_index = 0
         self.last_state_index = -1
@@ -298,7 +314,7 @@ class OperatorInspectionFrame(QFrame):
         main_layout.addWidget(splitter)
         control_panel = QFrame(self)
         splitter.addWidget(control_panel)
-        self.plot = PMHistogramWidget(initial_state, self)
+        self.plot = SBXHistogramWidget(initial_state, self)
         splitter.addWidget(self.plot)
         splitter.setStretchFactor(0,1)
         splitter.setStretchFactor(1,4)
@@ -317,16 +333,27 @@ class OperatorInspectionFrame(QFrame):
             self._nbins_to_bin_slider(initial_state.nbins))
         self.bins_slider.valueChanged.connect(self._nbins_changed)
 
-        self.parent_label = QLabel(control_panel)
-        cp_layout.addWidget(self.parent_label)
-        self.parent_slider = QSlider(Qt.Horizontal, control_panel)
-        cp_layout.addWidget(self.parent_slider)
-        self.parent_slider.setMinimum(0)
-        self.parent_slider.setMaximum(100)
-        self.parent_label.setText("x = {:.2f}".format(initial_state.x_parent))
-        self.parent_slider.setValue(
-            self._parent_x_to_slider(initial_state.x_parent))
-        self.parent_slider.valueChanged.connect(self._x_parent_changed)
+        self.parent1_label = QLabel(control_panel)
+        cp_layout.addWidget(self.parent1_label)
+        self.parent1_slider = QSlider(Qt.Horizontal, control_panel)
+        cp_layout.addWidget(self.parent1_slider)
+        self.parent1_slider.setMinimum(0)
+        self.parent1_slider.setMaximum(100)
+        self.parent1_label.setText("x1 = {:.2f}".format(initial_state.x_parent1))
+        self.parent1_slider.setValue(
+            self._parent_x_to_slider(initial_state.x_parent1))
+        self.parent1_slider.valueChanged.connect(self._x_parent1_changed)
+
+        self.parent2_label = QLabel(control_panel)
+        cp_layout.addWidget(self.parent2_label)
+        self.parent2_slider = QSlider(Qt.Horizontal, control_panel)
+        cp_layout.addWidget(self.parent2_slider)
+        self.parent2_slider.setMinimum(0)
+        self.parent2_slider.setMaximum(100)
+        self.parent2_label.setText("x2 = {:.2f}".format(initial_state.x_parent2))
+        self.parent2_slider.setValue(
+            self._parent_x_to_slider(initial_state.x_parent2))
+        self.parent2_slider.valueChanged.connect(self._x_parent2_changed)
 
         self.samples_label = QLabel(control_panel)
         cp_layout.addWidget(self.samples_label)
@@ -378,10 +405,16 @@ class OperatorInspectionFrame(QFrame):
         x_parent = 0.01 * slider
         return x_parent
 
-    def _x_parent_changed(self, slider_position):
-        x_parent = self._slider_to_parent_x(slider_position)
-        new_state = self.states[self.state_index].update_x_parent(x_parent)
-        self.parent_label.setText("x = {:.2f}".format(x_parent))
+    def _x_parent1_changed(self, slider_position):
+        x_parent1 = self._slider_to_parent_x(slider_position)
+        new_state = self.states[self.state_index].update_x_parent1(x_parent1)
+        self.parent1_label.setText("x1 = {:.2f}".format(x_parent1))
+        self.do(new_state)
+
+    def _x_parent2_changed(self, slider_position):
+        x_parent2 = self._slider_to_parent_x(slider_position)
+        new_state = self.states[self.state_index].update_x_parent2(x_parent2)
+        self.parent2_label.setText("x2 = {:.2f}".format(x_parent2))
         self.do(new_state)
 
     def _samples_to_slider(self, samples):
@@ -432,9 +465,12 @@ class OperatorInspectionFrame(QFrame):
         self.bins_slider.setValue(
             self._nbins_to_bin_slider(state.nbins))
         self.bins_label.setText("{} bins".format(state.nbins))
-        self.parent_slider.setValue(
-            self._parent_x_to_slider(state.x_parent))
-        self.parent_label.setText("x = {:.2f}".format(state.x_parent))
+        self.parent1_slider.setValue(
+            self._parent_x_to_slider(state.x_parent1))
+        self.parent1_label.setText("x1 = {:.2f}".format(state.x_parent1))
+        self.parent2_slider.setValue(
+            self._parent_x_to_slider(state.x_parent2))
+        self.parent2_label.setText("x2 = {:.2f}".format(state.x_parent2))
         self.samples_slider.setValue(
             self._samples_to_slider(state.samples))
         self.samples_label.setText("{} samples".format(state.samples))
