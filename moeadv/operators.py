@@ -17,6 +17,9 @@ def pm_inner(x_lower, x_upper, di):
         raise Exception(
             "Cannot define PM for non-positive range {} to {}".format(
                 x_lower, x_upper))
+    if di < 0:
+        raise Exception(
+            "PM is not defined for negative values of distribution index.")
     alpha = di + 1
     exponent = 1.0 / alpha
     def operator(x_parent):
@@ -53,66 +56,58 @@ def sbx_inner(x_lower, x_upper, di):
     x_range = x_upper - x_lower
     if x_range <= 0.0:
         raise Exception(
-            "Cannot define PM for non-positive range {} to {}".format(
+            "Cannot define SBX for non-positive range {} to {}".format(
                 x_lower, x_upper))
-    """
-    * Let gamma = η_c+1
-    * Let kappa = 1/gamma
-    """
+    if di < 0.0:
+        raise Exception(
+            "SBX is not defined for negative values of distribution index.")
     gamma = di + 1.0
     kappa = 1.0 / gamma
+    assert(kappa > 0.0)
+    assert(kappa <= 1.0)
     def operator(x_parent1, x_parent2):
-        """
-        Transform parents into normalized coordinates as follows.
-        * if x_parent1 < x_parent2
-            * y_1 = (x_parent1 - x_lower) / x_range
-            * y_2 = (x_parent2 - x_lower) / x_range
-        * otherwise
-            * y_2 = (x_parent1 - x_lower) / x_range
-            * y_1 = (x_parent2 - x_lower) / x_range
-        """
+        if x_parent1 == x_parent2:
+            # early return if parents are the same
+            return x_parent1
         if x_parent1 < x_parent2:
             y_1 = (x_parent1 - x_lower) / x_range
             y_2 = (x_parent2 - x_lower) / x_range
         else:
             y_2 = (x_parent1 - x_lower) / x_range
             y_1 = (x_parent2 - x_lower) / x_range
-
-        """
-        * Let delta = y_2 - y_1
-        * Let β = 1 + (2/delta) * min(y_1, 1-y_2)
-        * Let α = 2 - β^{-gamma}
-        """
+        assert(y_1 >= 0.0)
+        assert(y_1 <= 1.0)
+        assert(y_2 >= 0.0)
+        assert(y_2 <= 1.0)
+        assert(y_1 <= y_2)
         delta = y_2 - y_1
+        assert(delta > 0.0)
+        assert(delta <= 1.0)
         beta = 1.0 + (2.0/delta) * min(y_1, 1-y_2)
+        assert(beta >= 1.0)
         alpha = 2.0 - beta ** (-gamma)
-        """
-        * Let uniform_1 be a sample from the uniform random variate on [0,1].
-        * if uniform_1 <= 1/α
-            * β_q = (u*α)^kappa
-        * otherwise
-            * β_q = (1 / (2 - u*α))^kappa
-        """
-        uniform_1 = random.random()
+        assert(alpha <= 2.0)
+        assert(alpha >= 1.0)
+        uniform_1 = random()
         if uniform_1 <= 1.0 / alpha:
             beta_q = (uniform_1 * alpha) ** kappa
+            assert(beta_q >= 0.0)
+            assert(beta_q <= 1.0)
         else:
+            assert(uniform_1 > 0.5)
             beta_q = (1.0 / (2.0 - uniform_1 * alpha)) ** kappa
-        """
-        To determine which parent the child favors:
-        * Let uniform_2 be another sample from the uniform random variate on [0,1].
-        * If uniform_2 <= 0.5,
-        * let sign = -1
-        * otherwise let sign = 1.
-        """
-        uniform_2 = random.random()
+            assert(beta_q >= 0.0)
+            #assert(beta_q <= 1.0)
+        uniform_2 = random()
         if uniform_2 <= 0.5:
             sign = -1.0
         else:
             sign = 1.0
-        """
-        y_child = 0.5[(y_1+y_2) + sign * β_q * delta]
-        """
         y_child = 0.5 * ((y_1 + y_2) + sign * beta_q * delta)
-        return y_child
+        assert(y_child >= 0.0)
+        assert(y_child <= 1.0)
+        x_child = x_lower + x_range * y_child
+        assert(x_child >= x_lower)
+        assert(x_child <= x_upper)
+        return x_child
     return operator
