@@ -57,40 +57,41 @@ def sbx_inner(x_lower, x_upper, di):
                 x_lower, x_upper))
     gamma = di + 1.0
     kappa = 1.0 / gamma
+    def operator(x_parent1, x_parent2):
+
     """
-    1. Create a random number `u` between 0 and 1.
+    1.
+    * Let uniform_1 be a sample from the uniform random variate on [0,1].
+
     2.
+    * Let gamma = η_c+1
+    * Let kappa = 1/gamma
 
-    Let gamma = η_c+1
-    Let kappa = 1/gamma
+    Transform parents into normalized coordinates as follows.
 
-    Find a parameter β_q using a polynomial probability
-    distribution, developed in [Deb and Agrawal 1995] from a
-    schema processing point of view, as follows:
+    * if x_parent1 < x_parent2
+        * y_1 = (x_parent1 - x_lower) / x_range
+        * y_2 = (x_parent2 - x_lower) / x_range
+    * otherwise
+        * y_2 = (x_parent1 - x_lower) / x_range
+        * y_1 = (x_parent2 - x_lower) / x_range
 
-    β_q = (uα)^kappa if u <= 1/α
-    β_q = \frac{1}{2-uα}^kappa otherwise
+    * Let delta = y_2 - y_1
+    * Let α = 2 - β^{-gamma}
+    * Let β = 1 + (2/delta) * min(y_1, 1-y_2)
+    * if uniform_1 <= 1/α
+        * β_q = (u*α)^kappa
+    * otherwise
+        * β_q = (1 / (2 - u*α))^kappa
 
-    where α = 2 - β^{-gamma}
-    and β = 1 + \frac{2}{y_2-y_1}min[(y_1-y_l),(y_u-y_2)]
+    Here, the parameter y is assumed to vary in [0,1].
 
-    Here, the parameter y is assumed t vary in [y_l, y_u].
-    The parameter η_c is the distribution index for SBX
-    and can take any non-negative value.  A small value
-    of η_c allows solutions far away from parents to be
-    created as children solutions and a large value
-    restricts only near-parent solutions to be created
-    as children solutions.
+    3.
+    Let uniform_2 be another sample from the uniform random variate on [0,1].
+    If uniform_2 <= 0.5,
+    let sign = -1
+    otherwise let sign = 1.
 
-    3. The children solutions are then calculated as follows:
-    c_1 = 0.5[(y_1+y_2) - β_q|y_2-y_1|]
-    c_2 = 0.5[(y_1+y_2) + β_q|y_2-y_1|]
-
-    It is assumed here that y_1 < y_2.  A simple modification
-    to the above equation can be made for y_1 > y_2.  For
-    handling multiple variables, each variable is chosen
-    with a probability 0.5 and the above SBX operator is
-    applied variable-by-variable.  In all simulation results
-    here, we have used η_c = 1.
+    y_child = 0.5[(y_1+y_2) + sign * β_q * delta]
     """
 
