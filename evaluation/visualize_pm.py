@@ -97,7 +97,7 @@ class PMHistogramWidget(QOpenGLWidget):
         self.vp = QOpenGLVersionProfile()
         self.shader_program = QOpenGLShaderProgram(self)
         self.counts, self.bin_edges = initial_state.counts()
-        self.selected_bin = None
+        self.selected_bin = -1
         self.setMouseTracking(True)
 
     def initializeGL(self):
@@ -110,22 +110,30 @@ class PMHistogramWidget(QOpenGLWidget):
         # vertex program scales 0,1 into -1,1
         vertex_program_text = """
         #version 130
-        in vec2 position;
+        in vec3 position;
         uniform float x_margin;
         uniform float y_margin;
+        out float selected;
 
         void main(){
             gl_Position = vec4(
                 (2*position.x-1) * (2.0 - x_margin*2.0)/2.0,
                 (2*position.y-1) * (2.0 - y_margin*2.0)/2.0,
                 0, 1.0);
+            selected = position.z;
         }
         """
         fragment_program_text = """
         #version 130
 
+        out vec4 fragment_color;
+        in float selected;
+
         void main(){
-            gl_FragColor = vec4(0.0, 0.5, 0.0, 0.5);
+            float red = selected;
+            float green = 0.5;
+            float blue = 0.0;
+            fragment_color = vec4(red, green, blue, 0.5);
         }
         """
         self.shader_program.addShaderFromSourceCode(
@@ -181,9 +189,9 @@ class PMHistogramWidget(QOpenGLWidget):
         fun.glBlendFunc(fun.GL_SRC_ALPHA, fun.GL_ONE_MINUS_SRC_ALPHA)
         self.shader_program.bind()
         vertices = self.vertices()
-        self.shader_program.setAttributeArray('position', vertices)
         self.shader_program.setUniformValue("x_margin", self.x_margin)
         self.shader_program.setUniformValue("y_margin", self.y_margin)
+        self.shader_program.setAttributeArray('position', vertices)
         self.shader_program.enableAttributeArray('position')
         fun.glDrawArrays(fun.GL_TRIANGLES, 0, vertices.shape[0])
         self.shader_program.disableAttributeArray('position')
@@ -200,23 +208,30 @@ class PMHistogramWidget(QOpenGLWidget):
             pixel_x = int(10 + bin_edge * working_width)
             pixel_y = int(self.pixel_height - 8)
             painter.drawText(pixel_x, pixel_y, text)
+        if 0 <= self.selected_bin <= self.counts.shape[0]:
+            painter.drawText(10, 20, "Selected Bin")
+            painter.drawText(10, 35, "[{:.4f},{:.4f})".format(
+                self.bin_edges[self.selected_bin],
+                self.bin_edges[self.selected_bin + 1]))
+            painter.drawText(10, 50, "{}%".format(
+                self.counts[self.selected_bin] * 100.0 / self.counts.sum()))
 
     def get_picked_bar(self, pixel_x, pixel_y):
         if pixel_x < 10 or pixel_x > self.pixel_width - 10:
-            return None
+            return -1
         if pixel_y < self.label_height or pixel_y > self.pixel_height - self.label_height:
-            return None
+            return -1
         x_scaled = (pixel_x - 10) * 1.0 / (self.pixel_width - 2 * 10)
         where_lt = numpy.where(self.bin_edges <= x_scaled)[0]
         if where_lt.size == 0:
-            return None
+            return -1
         where_gt = numpy.where(self.bin_edges > x_scaled)[0]
         if where_gt.size == 0:
-            return None
+            return -1
         last_lt = where_lt[-1]
         first_gt = where_gt[0]
         if first_gt - last_lt != 1:
-            return None
+            return -1
         # return last_lt here if you don't like the "only on the bin" feature
         # implemented below
         count = self.counts[last_lt]
@@ -225,7 +240,7 @@ class PMHistogramWidget(QOpenGLWidget):
         # the 0.05 is so that you can inspect low-count bins
         pixel_y_min = self.label_height + y_offset - 0.05 * self.pixel_height
         if pixel_y < pixel_y_min:
-            return None
+            return -1
         return last_lt
 
     def mouseMoveEvent(self, the_event):
@@ -233,9 +248,10 @@ class PMHistogramWidget(QOpenGLWidget):
         pos = the_event.pos()
         pixel_x = pos.x()
         pixel_y = pos.y()
+        old_selected_bin = self.selected_bin
         self.selected_bin = self.get_picked_bar(pixel_x, pixel_y)
-        if self.selected_bin is not None:
-            print(self.counts[self.selected_bin])
+        if self.selected_bin != old_selected_bin:
+            self.update()
 
     def vertices(self):
         maxcount = self.counts.max()
@@ -253,18 +269,25 @@ class PMHistogramWidget(QOpenGLWidget):
         unflattened_yy = numpy.array(
             (bottom, bottom, top, bottom, top, top))
         yy = unflattened_yy.flatten("F")
-        vertices = numpy.array((xx, yy)).T
+        sel = numpy.zeros(nbins)
+        if 0 <= self.selected_bin < nbins:
+            sel[self.selected_bin] = 1.0
+        unflattened_zz = numpy.array(
+            (sel, sel, sel, sel, sel, sel))
+        zz = unflattened_zz.flatten("F")
+        vertices = numpy.array((xx, yy, zz)).T
         return vertices
 
     def set_state(self, state):
         self.counts, self.bin_edges = state.counts()
+        self.selected_bin = -1
         self.update()
 
 class OperatorInspectionFrame(QFrame):
     def __init__(self, *args, **kwargs):
         super(OperatorInspectionFrame, self).__init__(*args, **kwargs)
         # prepare state
-        initial_state = PMHistogramState(15, 0.5, 10000, 100)
+        initial_state = PMHistogramState(15, 0.5, 10000, 16)
         self.states = [initial_state]
         self.state_index = 0
         self.last_state_index = -1
@@ -446,8 +469,6 @@ class OperatorInspectionFrame(QFrame):
                     retaining = retained_samples < 500000
                 else:
                     state.release_data()
-
-        self.plot.get_picked_bar(100,100)
 
 qapp = QApplication(sys.argv)
 oif = OperatorInspectionFrame()
