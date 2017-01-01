@@ -1,9 +1,11 @@
 """
-DTLZ2 implementation, clean from the literature.
+Test problems.
 """
 from math import pi
 from math import sin
 from math import cos
+import random
+
 
 def dtlz2(ndv, nobj):
     """
