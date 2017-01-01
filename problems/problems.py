@@ -6,6 +6,36 @@ from math import sin
 from math import cos
 import random
 
+def uniform_random_dv_rotation(ndv):
+    """
+    construct a uniform rotation for the decision variables.
+    Based on iorio 2006.
+    """
+
+    """
+    Quoting iorio 2006:
+    R is an m \times m rotation matrix.  N(0,1) is the normal
+    distribution with mean 0 and variance 1.
+
+    for i = 0 to m do (rows)
+        for j = 0 to m do (columns)
+            R_{ij} = N(0,1)
+        end for
+        for j = 0 to m do
+            R_{ij} = R_{ij} / ||R_i||
+        end for
+        \vec{d} = R_i
+        for all j s.t. 0 <= j <= i
+            n = ||\vec{d}||
+            p = \vec{d} \dot R_j
+            for k = 0 to m do
+                d_k = (d_k - p \dot R_{jk}) / (n^2)
+            end for
+        end for
+        R_i = \vec{d} / ||\vec{d}||
+    end for
+    """
+
 def dtlz2(ndv, nobj):
     """
     return an instance of dtlz2 with the requested number of
