@@ -1,7 +1,12 @@
-import math
+"""
+DTLZ2 implementation, clean from the literature.
+"""
+from math import pi
+from math import sin
+from math import cos
 
 def dtlz2(ndv, nobj):
-        """
+    """
     return an instance of dtlz2 with the requested number of
     decision variables and objectives.
     """
@@ -15,9 +20,9 @@ def dtlz2(ndv, nobj):
         """
         # To ease translation, always produce jj from ii.
         gg = sum((xx[jj] - 0.5)**2.0
-                  for jj in (ii-1 for ii in range(nobj, ndv+1)))
+                 for jj in (ii-1 for ii in range(nobj, ndv+1)))
         gplus1 = 1.0 + gg
-        scaled_pi_over_2 = [x * math.pi * 0.5 for x in xx]
+        scaled_pi_over_2 = [x * pi * 0.5 for x in xx]
         ff = list()
         f1 = gplus1
         for ii in range(1, nobj):
@@ -43,7 +48,7 @@ def dtlz2(ndv, nobj):
         return ff
     return evaluate
 
-    """
+    r"""
     Quoting Deb et al. 2002...
 
     This test problem has a spherical Pareto-optimal front
@@ -56,7 +61,8 @@ def dtlz2(ndv, nobj):
     0 <= x_i <= 1 for i = 1,2,\ldots,n
     where g(x_M) = \sum_{x_i\in \vec{x_M}}(x_i - 0.5)^2
     """
-    """
+
+    r"""
     The above is a little unclear with its dots and its \vec{x_M} versus
     x_M.  What it means is that each x_i where i < M gets included in f.
     index M-1 gets a sine except for f_1.
