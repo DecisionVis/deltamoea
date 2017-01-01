@@ -6,7 +6,6 @@ from math import sin
 from math import cos
 import random
 
-
 def dtlz2(ndv, nobj):
     """
     return an instance of dtlz2 with the requested number of
