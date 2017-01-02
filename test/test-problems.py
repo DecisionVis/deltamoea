@@ -4,6 +4,7 @@ test-problems.py
 Tests for test problems.
 """
 from problems.problems import dtlz2
+from problems.problems import uniform_random_dv_rotation
 import random
 
 def test_dtlz2_range():
@@ -23,10 +24,28 @@ def test_dtlz2_range():
                 assert(len(yy) == nobj)
                 for ii, objective in enumerate(yy):
                     if objective < 0:
-                        print("nobj {} ndv {} counter {} objective {} is {} < 0".format(
+                        raise Exception("nobj {} ndv {} counter {} objective {} is {} < 0".format(
                             nobj, ndv, counter, ii, objective))
                     if objective > upper_limit:
-                        print("nobj {} ndv {} counter {} objective {} is {} > {}".format(
+                        raise Exception("nobj {} ndv {} counter {} objective {} is {} > {}".format(
                             nobj, ndv, counter, ii, objective, upper_limit))
+
+def test_rotate():
+    """
+    test that vectors still have the same length after rotation
+    """
+    for ndv in range(2, 30):
+        for aa in range(10):
+            print("ndv {} aa {}".format(ndv, aa))
+            rotate = uniform_random_dv_rotation(ndv)
+            for bb in range(10):
+                xx = [random.random() for _ in range(ndv)]
+                xlength = sum(x**2 for x in xx) ** 0.5
+                yy = rotate(xx)
+                ylength = sum(y**2 for y in yy) ** 0.5
+                if abs(xlength - ylength) > 1e-6:
+                    raise Exception(
+                        "ndv {} rotation {} iteration {} xx {} yy {} xlength {} ylength {}".format(
+                            ndv, aa, bb, xx, yy, xlength, ylength))
 
 

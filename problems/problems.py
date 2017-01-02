@@ -4,37 +4,84 @@ Test problems.
 from math import pi
 from math import sin
 from math import cos
+from array import array # no numpy???
 import random
+
+import pprint
 
 def uniform_random_dv_rotation(ndv):
     """
-    construct a uniform rotation for the decision variables.
-    Based on iorio 2006.
+    construct a uniform rotation matrix for the decision
+    variables.
+    The matrix is randomly generated but there is no guarantee
+    that it has any particular distribution.
+    Returns a function that applies the rotation.
     """
 
-    """
-    Quoting iorio 2006:
-    R is an m \times m rotation matrix.  N(0,1) is the normal
-    distribution with mean 0 and variance 1.
+    def make_matrix():
+        """
+        this is defined as a function in a function because I want
+        the locals to go out of scope and not get captured by the
+        rotate function I'm going to return
+        """
+        matrix = [array('d', range(ndv)) for _ in range(ndv)]
+        # generate a random matrix
+        for ii in range(ndv):
+            for jj in range(ndv):
+                matrix[ii][jj] = random.normalvariate(0, 1)
+        pprint.pprint(matrix)
+        # normalize the first time
+        for ii in range(ndv):
+            norm = sum(x ** 2 for x in matrix[ii]) ** 0.5
+            for jj in range(ndv):
+                matrix[ii][jj] = matrix[ii][jj] / norm
+        # for each pair of rows
+        # compute the projection of row i onto row k as follows:
+        # first take the dot product of rows i and k
+        # that's the length of the projection we want to subtract
+        # since we just normalized, this will be a fraction of 1
+        # take that and multiply
+        # orthogonalize by computing the dot product between
+        # row i and row k, and subtracting from row k
 
-    for i = 0 to m do (rows)
-        for j = 0 to m do (columns)
-            R_{ij} = N(0,1)
-        end for
-        for j = 0 to m do
-            R_{ij} = R_{ij} / ||R_i||
-        end for
-        \vec{d} = R_i
-        for all j s.t. 0 <= j <= i
-            n = ||\vec{d}||
-            p = \vec{d} \dot R_j
-            for k = 0 to m do
-                d_k = (d_k - p \dot R_{jk}) / (n^2)
-            end for
-        end for
-        R_i = \vec{d} / ||\vec{d}||
-    end for
-    """
+
+
+
+            #print("matrix {}".format(matrix))
+            #for ii in range(ndv):
+            #print("norm row {}: {}".format(ii, norm))
+            for jj in range(ndv):
+                matrix[ii][jj] = matrix[ii][jj] / norm
+            #assert(abs(sum(x ** 2 for x in matrix[ii]) ** 0.5 - 1.0) < 1e-6)
+            print("normalized row {} is {}".format(ii, matrix[ii]))
+            dd = [x for x in matrix[ii]]
+            for jj in range(ii+1):
+                nn = sum(x ** 2 for x in dd) ** 0.5
+                nsquared = nn ** 2
+                pp = sum(dd[kk] * matrix[kk][jj] for kk in range(ndv))
+                print("nn {} nsquared {} pp {}".format(nn, nsquared, pp))
+                for kk in range(ndv):
+                    dd[kk] = (dd[kk] - pp * matrix[jj][kk]) / nsquared
+                print("jj {} dd = {}".format(jj, dd))
+            nn = sum(x ** 2 for x in dd) ** 0.5
+            print("nn {} dd {} R{} {}".format(nn, dd, ii, matrix[ii]))
+            for jj in range(ndv):
+                matrix[ii][jj] = dd[jj] / nn
+        return matrix
+    matrix = make_matrix()
+    if ndv == 2:
+        assert(matrix[0][1] == -matrix[1][0])
+        assert(matrix[0][0] == matrix[1][1])
+        determinant = matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0]
+        print("determinant {}".format(determinant))
+        assert(determinant == 1)
+    def rotate(xx):
+        yy = [0 for _ in xx]
+        for ii in range(ndv):
+            for jj in range(ndv):
+                yy[ii] += matrix[ii][jj] * xx[jj]
+        return yy
+    return rotate
 
 def dtlz2(ndv, nobj):
     """
