@@ -30,48 +30,31 @@ def uniform_random_dv_rotation(ndv):
             for jj in range(ndv):
                 matrix[ii][jj] = random.normalvariate(0, 1)
         pprint.pprint(matrix)
+        # Gram–Schmidt orthonormalization per Wikipedia
         for ii, uu in enumerate(matrix):
-
+            length = sum(x**2 for x in uu)**0.5
+            for jj in range(ndv):
+                uu[jj] = uu[jj] / length
+            # uu is now normalized
+            assert(abs(sum(x**2 for x in uu)**0.5 - 1) < 1e-6)
             for vv in matrix[ii+1:]:
-        # orthogonalize and normalize:
-        # for each row u,
-        #     compute the length of u
-        #     divide u by ||u|| to get a unit vector in the direction of u
-        #     replace u with this unit vector: u = u / ||u||
-        #     for every following row v
-        #         compute the dot product between v and u.  This is the length of the projection of v along u.
-        #         multiply this by u and subtract from v.  Now v and u are orthogonal, and u is normalized.
-
-
-
-            #print("matrix {}".format(matrix))
-            #for ii in range(ndv):
-            #print("norm row {}: {}".format(ii, norm))
-            for jj in range(ndv):
-                matrix[ii][jj] = matrix[ii][jj] / norm
-            #assert(abs(sum(x ** 2 for x in matrix[ii]) ** 0.5 - 1.0) < 1e-6)
-            print("normalized row {} is {}".format(ii, matrix[ii]))
-            dd = [x for x in matrix[ii]]
-            for jj in range(ii+1):
-                nn = sum(x ** 2 for x in dd) ** 0.5
-                nsquared = nn ** 2
-                pp = sum(dd[kk] * matrix[kk][jj] for kk in range(ndv))
-                print("nn {} nsquared {} pp {}".format(nn, nsquared, pp))
-                for kk in range(ndv):
-                    dd[kk] = (dd[kk] - pp * matrix[jj][kk]) / nsquared
-                print("jj {} dd = {}".format(jj, dd))
-            nn = sum(x ** 2 for x in dd) ** 0.5
-            print("nn {} dd {} R{} {}".format(nn, dd, ii, matrix[ii]))
-            for jj in range(ndv):
-                matrix[ii][jj] = dd[jj] / nn
+                dot = sum(xx*yy for xx, yy in zip(uu, vv))
+                projection = [dot * x for x in uu]
+                for jj in range(ndv):
+                    vv[jj] = vv[jj] - projection[jj]
+                # vv is now orthogonal to uu
+                assert(abs(sum(xx*yy for xx,yy in zip(uu,vv))) < 1e-6)
+        for ii, uu in enumerate(matrix):
+            assert(abs(sum(x**2 for x in uu)**0.5 - 1) < 1e-6)
+            for vv in matrix[ii+1:]:
+                assert(abs(sum(xx*yy for xx,yy in zip(uu,vv))) < 1e-6)
         return matrix
     matrix = make_matrix()
+    pprint.pprint(matrix)
     if ndv == 2:
-        assert(matrix[0][1] == -matrix[1][0])
-        assert(matrix[0][0] == matrix[1][1])
         determinant = matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0]
         print("determinant {}".format(determinant))
-        assert(determinant == 1)
+        assert(abs(abs(determinant) - 1) < 1e-6)
     def rotate(xx):
         yy = [0 for _ in xx]
         for ii in range(ndv):
