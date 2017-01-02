@@ -7,7 +7,36 @@ from math import cos
 from array import array # no numpy???
 import random
 
-import pprint
+def make_matrix(ndv):
+    """
+    this is defined as a function in a function because I want
+    the locals to go out of scope and not get captured by the
+    rotate function I'm going to return
+    """
+    matrix = [array('d', range(ndv)) for _ in range(ndv)]
+    # generate a random matrix (per Iorio 2006)
+    for ii in range(ndv):
+        for jj in range(ndv):
+            matrix[ii][jj] = random.normalvariate(0, 1)
+    # Gram–Schmidt orthonormalization per Wikipedia
+    # (Iorio's Algorithm 1 wasn't working for me)
+    for ii, uu in enumerate(matrix):
+        length = sum(x**2 for x in uu)**0.5
+        for jj in range(ndv):
+            uu[jj] = uu[jj] / length
+        # uu is now normalized
+        for vv in matrix[ii+1:]:
+            dot = sum(xx*yy for xx, yy in zip(uu, vv))
+            # projection of vv along uu
+            projection = [dot * x for x in uu]
+            for jj in range(ndv):
+                vv[jj] = vv[jj] - projection[jj]
+            # vv is now orthogonal to uu
+    # Because it's orthonormal, the matrix is now a rotation.
+    # The use of the normal variate is supposed to distribute
+    # the rotation evenly on the hypersphere, but I really have
+    # no idea!
+    return matrix
 
 def uniform_random_dv_rotation(ndv):
     """
@@ -17,44 +46,7 @@ def uniform_random_dv_rotation(ndv):
     that it has any particular distribution.
     Returns a function that applies the rotation.
     """
-
-    def make_matrix():
-        """
-        this is defined as a function in a function because I want
-        the locals to go out of scope and not get captured by the
-        rotate function I'm going to return
-        """
-        matrix = [array('d', range(ndv)) for _ in range(ndv)]
-        # generate a random matrix
-        for ii in range(ndv):
-            for jj in range(ndv):
-                matrix[ii][jj] = random.normalvariate(0, 1)
-        pprint.pprint(matrix)
-        # Gram–Schmidt orthonormalization per Wikipedia
-        for ii, uu in enumerate(matrix):
-            length = sum(x**2 for x in uu)**0.5
-            for jj in range(ndv):
-                uu[jj] = uu[jj] / length
-            # uu is now normalized
-            assert(abs(sum(x**2 for x in uu)**0.5 - 1) < 1e-6)
-            for vv in matrix[ii+1:]:
-                dot = sum(xx*yy for xx, yy in zip(uu, vv))
-                projection = [dot * x for x in uu]
-                for jj in range(ndv):
-                    vv[jj] = vv[jj] - projection[jj]
-                # vv is now orthogonal to uu
-                assert(abs(sum(xx*yy for xx,yy in zip(uu,vv))) < 1e-6)
-        for ii, uu in enumerate(matrix):
-            assert(abs(sum(x**2 for x in uu)**0.5 - 1) < 1e-6)
-            for vv in matrix[ii+1:]:
-                assert(abs(sum(xx*yy for xx,yy in zip(uu,vv))) < 1e-6)
-        return matrix
-    matrix = make_matrix()
-    pprint.pprint(matrix)
-    if ndv == 2:
-        determinant = matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0]
-        print("determinant {}".format(determinant))
-        assert(abs(abs(determinant) - 1) < 1e-6)
+    matrix = make_matrix(ndv)
     def rotate(xx):
         yy = [0 for _ in xx]
         for ii in range(ndv):
@@ -103,4 +95,24 @@ def dtlz2(ndv, nobj):
         fM = gplus1 * sin(scaled)
         ff.append(fM)
         return ff
+    return evaluate
+
+def dtlz2_rotated(ndv, nobj):
+    rotate = uniform_random_dv_rotation(ndv)
+    straight_dtlz2 = dtlz2(ndv, nobj)
+    scale = ndv ** -0.5
+    def evaluate(xx):
+        # transform x into range -0.5 to 0.5 from 0 to 1
+        shifted = [t - 0.5 for t in xx]
+        rotated = rotate(shifted)
+        # Now transform back into range 0 1
+        unshifted = [t + 0.5 for t in rotated]
+        # And scale down by the square root of n to keep within the
+        # domain.  This will probably make it impossible to cover the whole
+        # pareto front.
+        scaled = [t*scale for t in unshifted]
+        print(scaled)
+        assert(all(s >= 0 for s in scaled))
+        assert(all(s <= 1 for s in scaled))
+        return straight_dtlz2(scaled)
     return evaluate
