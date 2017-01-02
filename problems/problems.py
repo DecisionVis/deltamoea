@@ -102,17 +102,15 @@ def dtlz2_rotated(ndv, nobj):
     straight_dtlz2 = dtlz2(ndv, nobj)
     scale = ndv ** -0.5
     def evaluate(xx):
-        # transform x into range -0.5 to 0.5 from 0 to 1
-        shifted = [t - 0.5 for t in xx]
-        rotated = rotate(shifted)
-        # Now transform back into range 0 1
-        unshifted = [t + 0.5 for t in rotated]
-        # And scale down by the square root of n to keep within the
-        # domain.  This will probably make it impossible to cover the whole
-        # pareto front.
-        scaled = [t*scale for t in unshifted]
-        print(scaled)
-        assert(all(s >= 0 for s in scaled))
-        assert(all(s <= 1 for s in scaled))
-        return straight_dtlz2(scaled)
+        rotated = rotate(xx)
+        for ii, vv in enumerate(rotated):
+            # reflect back into the first quadrant
+            # and clamp to [0.0, 1.0]
+            if vv < -1.0:
+                rotated[ii] = 1.0
+            elif vv < 0.0:
+                rotated[ii] = -vv
+            elif vv > 1.0:
+                rotated[ii] = 1.0
+        return straight_dtlz2(rotated)
     return evaluate
