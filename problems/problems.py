@@ -30,20 +30,17 @@ def uniform_random_dv_rotation(ndv):
             for jj in range(ndv):
                 matrix[ii][jj] = random.normalvariate(0, 1)
         pprint.pprint(matrix)
-        # normalize the first time
-        for ii in range(ndv):
-            norm = sum(x ** 2 for x in matrix[ii]) ** 0.5
-            for jj in range(ndv):
-                matrix[ii][jj] = matrix[ii][jj] / norm
-        # for each pair of rows
-        # compute the projection of row i onto row k as follows:
-        # first take the dot product of rows i and k
-        # that's the length of the projection we want to subtract
-        # since we just normalized, this will be a fraction of 1
-        # take that and multiply
-        # orthogonalize by computing the dot product between
-        # row i and row k, and subtracting from row k
+        for ii, uu in enumerate(matrix):
 
+            for vv in matrix[ii+1:]:
+        # orthogonalize and normalize:
+        # for each row u,
+        #     compute the length of u
+        #     divide u by ||u|| to get a unit vector in the direction of u
+        #     replace u with this unit vector: u = u / ||u||
+        #     for every following row v
+        #         compute the dot product between v and u.  This is the length of the projection of v along u.
+        #         multiply this by u and subtract from v.  Now v and u are orthogonal, and u is normalized.
 
 
 
