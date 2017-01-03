@@ -71,28 +71,38 @@ def dtlz2(ndv, nobj):
         gg = sum((xx[jj] - 0.5)**2.0
                  for jj in (ii-1 for ii in range(nobj, ndv+1)))
         gplus1 = 1.0 + gg
+        assert(gplus1 >= 1.0)
         scaled_pi_over_2 = [x * pi * 0.5 for x in xx]
         ff = list()
         f1 = gplus1
         for ii in range(1, nobj):
             jj = ii - 1
             scaled = scaled_pi_over_2[jj]
-            f1 = f1 * cos(scaled)
+            cos_scaled = cos(scaled)
+            assert(cos_scaled >= 0.0)
+            f1 = f1 * cos_scaled
         ff.append(f1)
         for ii in range(2, nobj):
             fi = gplus1
             for i2 in range(1, nobj + 1 - ii):
                 jj = i2 - 1
                 scaled = scaled_pi_over_2[jj]
-                fi = fi * cos(scaled)
-            i2 = nobj
+                cos_scaled = cos(scaled)
+                assert(cos_scaled >= 0.0)
+                fi = fi * cos_scaled
+            i2 = nobj + 1 - ii
             jj = i2 - 1
-            fi = fi * sin(scaled)
+            scaled = scaled_pi_over_2[jj]
+            sin_scaled = sin(scaled)
+            assert(sin_scaled >= 0.0)
+            fi = fi * sin_scaled
             ff.append(fi)
-        ii = nobj
+        ii = 1
         jj = ii - 1
         scaled = scaled_pi_over_2[jj]
-        fM = gplus1 * sin(scaled)
+        sin_scaled = sin(scaled)
+        assert(sin_scaled >= 0)
+        fM = gplus1 * sin_scaled
         ff.append(fM)
         return ff
     return evaluate

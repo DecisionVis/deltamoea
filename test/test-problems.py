@@ -30,6 +30,11 @@ def test_dtlz2_range():
                     if objective > upper_limit:
                         raise Exception("nobj {} ndv {} counter {} objective {} is {} > {}".format(
                             nobj, ndv, counter, ii, objective, upper_limit))
+                radius = sum((v**2 for v in yy))**0.5
+                if radius < 1.0:
+                    raise Exception("nobj {} ndv {} counter {} radius is {} where x is {} and y is {}".format(
+                        nobj, ndv, counter, radius, xx, yy))
+ 
 
 def test_rotate():
     """
