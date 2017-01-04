@@ -3,14 +3,19 @@ from moeadv.moeadv import Decision
 from moeadv.moeadv import Objective
 from moeadv.moeadv import Constraint
 from problems.problems import dtlz2
+from problems.problems import dtlz2_rotated
 
-evaluate = dtlz2(3, 2)
+evaluate = dtlz2_rotated(3, 2)
+
+delta = 0.05
 
 decisions = (
-    Decision("x1", 0.0, 1.0, 0.1),
-    Decision("x2", 0.0, 1.0, 0.1),
-    Decision("x3", 0.0, 1.0, 0.1),
+    Decision("x1", 0.0, 1.0, delta),
+    Decision("x2", 0.0, 1.0, delta),
+    Decision("x3", 0.0, 1.0, delta),
 )
+
+max_samples = delta ** -3
 
 objectives = (
     Objective("y1", "min"),
@@ -29,7 +34,10 @@ for nfe in range(1, 10001):
     dvs = moea.generate_sample()
     objs = evaluate(dvs)
     moea.receive_evaluated_sample(dvs, objs)
-    if moea.evolution_count() >= 1000:
+    if len(moea.samples) >= max_samples: break
+    print(moea.evolution_count())
+    if moea.evolution_count() >= 500:
+        print("doin' a restart!")
         # Replace population with archive and force the MOEA
         # into the "injecting" state, which produces new samples
         # from mutated archive solutions rather than by evolving
