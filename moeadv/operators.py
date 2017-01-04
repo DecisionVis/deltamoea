@@ -3,6 +3,30 @@ operators.py: definitions of MOEA search operators.
 """
 
 from random import random
+from math import ceil
+from math import floor
+
+def pm_delta(x_lower, x_upper, delta, di):
+    _operator = pm_inner(x_lower, x_upper, di)
+    def operator(x_parent):
+        x_child_continuous = _operator(x_parent)
+        continuous_delta = x_child_continuous - x_parent
+        if continuous_delta == 0:
+            x_child_unchecked = x_parent - delta
+        elif continuous_delta < 0:
+            deltas = floor(continuous_delta / delta)
+            x_child_unchecked = x_parent - deltas * delta
+        else:
+            deltas = ceil(continuous_delta / delta)
+            x_child_unchecked = x_parent + deltas * delta
+        if x_child_unchecked < x_lower:
+            x_child = x_lower
+        elif x_child_unchecked > x_upper:
+            x_child = x_upper
+        else:
+            x_child = x_child_unchecked
+        return x_child
+    return operator
 
 def pm_inner(x_lower, x_upper, di):
     """
