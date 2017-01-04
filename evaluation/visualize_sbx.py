@@ -37,8 +37,10 @@ class SBXHistogramState(object):
     def _sample(self):
         operator = sbx_inner(0.0, 1.0, self.di)
         vf = numpy.vectorize(operator)
-        x_parent1 = numpy.ones(self.samples, dtype='f') * self.x_parent1
-        x_parent2 = numpy.ones(self.samples, dtype='f') * self.x_parent2
+        x_parent1_half = numpy.ones(self.samples // 2, dtype='f') * self.x_parent1
+        x_parent2_half = numpy.ones(self.samples // 2, dtype='f') * self.x_parent2
+        x_parent1 = numpy.concatenate((x_parent1_half, x_parent2_half))
+        x_parent2 = numpy.concatenate((x_parent2_half, x_parent1_half))
         samples = vf(x_parent1, x_parent2)
         return samples
 

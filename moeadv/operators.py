@@ -64,10 +64,12 @@ def sbx_inner(x_lower, x_upper, di):
         if x_parent1 == x_parent2:
             # early return if parents are the same
             return x_parent1
+        swapped = False
         if x_parent1 < x_parent2:
             y_1 = (x_parent1 - x_lower) / x_range
             y_2 = (x_parent2 - x_lower) / x_range
         else:
+            swapped = True
             y_2 = (x_parent1 - x_lower) / x_range
             y_1 = (x_parent2 - x_lower) / x_range
         delta = y_2 - y_1
@@ -79,11 +81,10 @@ def sbx_inner(x_lower, x_upper, di):
         else:
             beta_q = (1.0 / (2.0 - uniform_1 * alpha)) ** kappa
             # This assertion is not true! assert(beta_q <= 1.0)
-        uniform_2 = random()
-        if uniform_2 <= 0.5:
-            sign = -1.0
-        else:
+        if swapped:
             sign = 1.0
+        else:
+            sign = -1.0
         y_child = 0.5 * ((y_1 + y_2) + sign * beta_q * delta)
         x_child = x_lower + x_range * y_child
         return x_child
