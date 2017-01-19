@@ -109,31 +109,30 @@ class PMHistogramWidget(QOpenGLWidget):
         self.vp.setVersion(2,1)
         # vertex program scales 0,1 into -1,1
         vertex_program_text = """
-        #version 130
-        in vec3 position;
+        #version 120
+        attribute vec3 position;
         uniform float x_margin;
         uniform float y_margin;
-        out float selected;
+        varying float selected;
 
         void main(){
             gl_Position = vec4(
-                (2*position.x-1) * (2.0 - x_margin*2.0)/2.0,
-                (2*position.y-1) * (2.0 - y_margin*2.0)/2.0,
-                0, 1.0);
+                (2.0*position.x-1.0) * (2.0 - x_margin*2.0)/2.0,
+                (2.0*position.y-1.0) * (2.0 - y_margin*2.0)/2.0,
+                0.0, 1.0);
             selected = position.z;
         }
         """
         fragment_program_text = """
-        #version 130
+        #version 120
 
-        out vec4 fragment_color;
-        in float selected;
+        varying float selected;
 
         void main(){
             float red = selected;
             float green = 0.5;
             float blue = 0.0;
-            fragment_color = vec4(red, green, blue, 0.5);
+            gl_FragColor = vec4(red, green, blue, 0.5);
         }
         """
         self.shader_program.addShaderFromSourceCode(
