@@ -192,7 +192,7 @@ class PMHistogramWidget(QOpenGLWidget):
         self.shader_program.setUniformValue("y_margin", self.y_margin)
         self.shader_program.setAttributeArray('position', vertices)
         self.shader_program.enableAttributeArray('position')
-        fun.glDrawArrays(fun.GL_TRIANGLES, 0, vertices.shape[0])
+        fun.glDrawArrays(fun.GL_TRIANGLES, 0, len(vertices))
         self.shader_program.disableAttributeArray('position')
         painter.endNativePainting()
         painter.setPen(QPen(QBrush(QColor(80,80,80)), 1))
@@ -275,7 +275,8 @@ class PMHistogramWidget(QOpenGLWidget):
             (sel, sel, sel, sel, sel, sel))
         zz = unflattened_zz.flatten("F")
         vertices = numpy.array((xx, yy, zz)).T
-        return vertices
+        qt_vertices = tuple((QVector3D(x, y, z) for x, y, z in vertices.tolist()))
+        return qt_vertices
 
     def set_state(self, state):
         self.counts, self.bin_edges = state.counts()
