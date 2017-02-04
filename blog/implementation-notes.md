@@ -14,7 +14,7 @@ steps and high probability.
 I've modified the formula a bit. I really don't understand why
 they've needlessly complicated it.  It makes me doubt that they knew
 what they were doing.  Either that or it's kind of a watermark to
-see whehter people have been copying their code.
+see whether people have been copying their code.
 
 Anyhow, my gamma is the same as (1-delta) in the formula, since
 that's all they use.

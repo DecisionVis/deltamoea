@@ -42,10 +42,21 @@ operator parameters.  Here are the adaptive things Borg does:
 
 In short, I like the things that auto-adapt based on population size,
 and I'm suspicious of things that try to auto adapt based on
-perceived search progress.  
+perceived search progress.
 
 This whole note is promted by the appendix to Deb and Agrawal 1999
 (the Niched Penalty paper) where SBX and PM are defined.  The
 original idea for PM has the distribution index and probability of
 mutation changing over time on a kind of "cooling schedule".  (My
 words, not theirs.  There is a good idea in there.
+
+## What Happens When Exhaust a Region?
+
+Suppose we exhaust a region.  By this I mean we have sampled a
+region around the current Pareto approximation so thoroughly
+that we've run out of points to sample in the neighborhood.
+What is our approach to variation operators when they start
+producing offspring we've already sampled?  We could decrease
+DI and try again?  Or we could take a vector from the parent to
+the child and continue stepping along it until we find a point
+that's not taken?
