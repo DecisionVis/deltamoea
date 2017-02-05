@@ -29,25 +29,43 @@ Individual = namedtuple(
     "Individual",
     [d.name for d in decisions] + [o.name for o in objectives] + [c.name for c in constraints])
 
-# Next, just allocate a big array to hold the Individuals.
-# In C, we'd make it an array of structs, but in Python we
-# don't have that option, so we're going to go column wise.
+class Grid(object):
+    """
+    Define the coordinates for the grid.  (Not the whole grid, but
+    the points on each axis.)
+    """
+    def __init__(self, decisions):
+        # Why tuples: This is a promise to myself about immutability.
+        # The coordinates may neither grow nor change once determined.
+        coordinates = list()
+        for decision in decisions:
+            points = list()
+            xx = decision.lower
+            while xx < decision.upper + (decision.upper - decision.lower) * 1e-6:
+                points.append(xx)
+                xx += decision.delta
+            coordinates.append(tuple(points))
+        self.coordinates = tuple(coordinates)
 
-def array_size(the_decisions):
-    decision = the_decisions[0]
-    range = decision.upper - decision.lower
-    decision_size = range / decision.delta
-    # special (but common) case: range is evenly divided by decisions
-    # (This is going to come up a lot, isn't it?  We don't just want
-    # to compute array size, we also want to compute actual grid points.
-    if abs(decision_size * delta - range) / range <= 1e-6:
+grid = Grid(decisions)
 
-    if len(the_decisions) == 1:
-        return decision_size
-    else:
-        return decision_size * array_size(the_decisions[1:]
+# Now we allocate an array to hold individuals.  To get in the spirit,
+# we're going to fill it in advance.
 
-decision_sizes = list()
+size_of_grid = 1
+for axis in grid.coordinates:
+    size_of_grid *= len(axis)
 
-for decision in decisions:
-    decision_size = 
+MAX_INDIVIDUALS = 10_000_000 # ten million!
+
+template_individual_variables = [0 for _ in decisions] + [0.0 for _ in objectives] + [0.0 for _ in constraints]
+template_individual = Individual(*template_individual_variables)
+individuals_received = 0
+individuals = [template_individual] * MAX_INDIVIDUALS
+
+# archive and population are just indices into the individuals array?
+
+
+import time
+time.sleep(10)
+
