@@ -9,25 +9,7 @@ from problems.problems import dtlz2_rotated
 from moeadv.moeadv import Decision
 from moeadv.moeadv import Objective
 
-evaluate = dtlz2_rotated(3,2)
-
-decisions = (
-    Decision('x', 0.0, 1.0, 0.1),
-    Decision('y', 0.0, 1.0, 0.05),
-    Decision('z', 0.0, 1.0, 0.25),)
-objectives = (
-    Objective('v', "min"),
-    Objective('w', "min"),)
-constraints = tuple()
-
 from collections import namedtuple
-
-# Here, we define a new custom type based on the problem definition.
-# Hey, Python, that's pretty cool!
- 
-Individual = namedtuple(
-    "Individual",
-    [d.name for d in decisions] + [o.name for o in objectives] + [c.name for c in constraints])
 
 class Grid(object):
     """
@@ -47,25 +29,82 @@ class Grid(object):
             coordinates.append(tuple(points))
         self.coordinates = tuple(coordinates)
 
-grid = Grid(decisions)
+from enum import Enum
 
-# Now we allocate an array to hold individuals.  To get in the spirit,
-# we're going to fill it in advance.
+MOEAState = Enum("MOEAState", "doe injecting evolving")
 
-size_of_grid = 1
-for axis in grid.coordinates:
-    size_of_grid *= len(axis)
+class Rank(object):
+    """
+    A Rank is 0 to ranksize Individuals.  Each rank is a Pareto rank, more
+    or less.  In the overpopulated case where we run out of space in a rank,
+    some individuals may get booted down a rank, but we'll emit a warning
+    if that happens.  It's certainly not the expected case, because we plan
+    on ranksize being big.
+    """
+    def __init__(self, ranksize, template_individual):
+        self.individuals = [template_individual] * ranksize
+        self.ranksize = ranksize
+        self.n_individuals = 0
 
-MAX_INDIVIDUALS = 10_000_000 # ten million!
+def index_to_point(grid, index):
+    point = [grid.coordinates[c][i] for c, i
+             in zip(grid.coordinates, index)]
+    return tuple(point)
 
-template_individual_variables = [0 for _ in decisions] + [0.0 for _ in objectives] + [0.0 for _ in constraints]
-template_individual = Individual(*template_individual_variables)
-individuals_received = 0
-individuals = [template_individual] * MAX_INDIVIDUALS
+def point_to_index(grid, point):
+    index = [max(i for i, v in enumerate(c) where v <= p)
+             for p, c in zip(point, grid.coordinates)]
+    return tuple(index)
 
-# archive and population are just indices into the individuals array?
+def design_of_experiments(grid):
+    """
+    Generator method.  Produces new samples indefinitely.
+    New samples are produced in decision space, not in index
+    space.
+    """
+    # start with a center point
+    lengths = tuple([len(c) for c in grid.coordinates])
+    center_index = [lnth // 2 for lnth in lengths]
+    center_point = index_to_point(center_index)
+    yield tuple(center_point)
+
+    # do the centers of each face and work your way out
+    # to the very most extreme corners of the space
+    last_index = [0] * len(grid.coordinates)
+    while True:
+        point = index_to_point(last_index)
+        yield point
+
+        last_index 
+
+if __name__ == "__main__":
+
+    evaluate = dtlz2_rotated(3,2)
+
+    decisions = (
+        Decision('x', 0.0, 1.0, 0.1),
+        Decision('y', 0.0, 1.0, 0.05),
+        Decision('z', 0.0, 1.0, 0.25),)
+    objectives = (
+        Objective('v', "min"),
+        Objective('w', "min"),)
+    constraints = tuple()
+
+    # Here, we define a new custom type based on the problem definition.
+    # Hey, Python, that's pretty cool!
+     
+    Individual = namedtuple(
+        "Individual",
+        [d.name for d in decisions] + [o.name for o in objectives] + [c.name for c in constraints])
+
+    # preallocate all of the ranks
+    template_individual_variables = [0 for _ in decisions] + [0.0 for _ in objectives] + [0.0 for _ in constraints]
+    template_individual = Individual(*template_individual_variables)
+    ranks = [Rank(10_000, template_individual) for _ in range(100)]
+
+    grid = Grid(decisions)
 
 
-import time
-time.sleep(10)
+    import time
+    time.sleep(10)
 
