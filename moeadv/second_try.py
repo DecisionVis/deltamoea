@@ -60,22 +60,41 @@ def design_of_experiments(grid):
     """
     Generator method.  Produces new samples indefinitely.
     New samples are produced in decision space, not in index
-    space.
+    space.  May eventually start repeating itself.
+
+    The design is:
+        first the center point (1 point)
+        then the middle of each face (2 * d points)
+        then each corner of the hypercube (2^d points)
+        then random points (indefinitely)
     """
-    # start with a center point
     lengths = tuple([len(c) for c in grid.coordinates])
-    center_index = [lnth // 2 for lnth in lengths]
-    center_point = index_to_point(center_index)
-    yield tuple(center_point)
+    max_length = max(lengths)
+    flags = tuple([False for _ in grid.coordinates])
+    counter = 0
+    spiral = 0
 
-    # do the centers of each face and work your way out
-    # to the very most extreme corners of the space
-    last_index = [0] * len(grid.coordinates)
     while True:
-        point = index_to_point(last_index)
-        yield point
+        if counter >= (1 << sum(flags)):
+            flags, overflow = advance_flags(flags)
+            if overflow:
+                spiral = (spiral + 1) % max_length
+            counter = 0
 
-        last_index 
+        index = [0 for _ in lengths]
+        bit = sum(flags)
+        for ii, (flag, length) in enumerate(zip(flags, lengths)):
+            if not flag:
+                index[ii] = length // 2
+            else:
+                bit -= 1
+                if counter & (1 << bit) == 0:
+                    index[ii] = spiral
+                else:
+                    index[ii] = length - 1 - spiral
+        counter += 1
+        point = index_to_point(index)
+        yield tuple(point)
 
 if __name__ == "__main__":
 
@@ -104,6 +123,12 @@ if __name__ == "__main__":
 
     grid = Grid(decisions)
 
+    # do initial design of experiments
+    state = MOEAState.doe
+    doe = design_of_experiments(grid)
+
+    for _ in range(10):
+        print(next(doe))
 
     import time
     time.sleep(10)
