@@ -176,6 +176,17 @@ If function evaluations are cheap, then the user can decide it's worth
 the occasional miss not to have to search through all those ranks.  And
 that's the crucial performance-tuning parameter for my algorithm!
 
-## Additional State
+## DOE State
 
-One other thing that may require some preallocation is the DOE state.
+The Python version of the DOE allocates lists willy-nilly
+for indices and points, and it's full of yields.  So use
+a static?  Sure, why not?  So a C version would do
+what exactly?  This is where we need to think about how
+this gets used.  How do you return an array in C?  Easy,
+somebody passes you an array and you fill it in.
+
+So there's not a whole lot of DOE related state you have to
+hold on to.  If you don't like the static, and I don't,
+you could instead pass in the moea state pointer.
+
+
