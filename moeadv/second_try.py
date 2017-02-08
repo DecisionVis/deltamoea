@@ -10,6 +10,7 @@ from moeadv.moeadv import Decision
 from moeadv.moeadv import Objective
 
 from collections import namedtuple
+from random import randint
 
 class Grid(object):
     """
@@ -47,12 +48,12 @@ class Rank(object):
         self.n_individuals = 0
 
 def index_to_point(grid, index):
-    point = [grid.coordinates[c][i] for c, i
+    point = [c[i] for c, i
              in zip(grid.coordinates, index)]
     return tuple(point)
 
 def point_to_index(grid, point):
-    index = [max(i for i, v in enumerate(c) where v <= p)
+    index = [max(i for i, v in enumerate(c) if v <= p)
              for p, c in zip(point, grid.coordinates)]
     return tuple(index)
 
@@ -69,32 +70,42 @@ def design_of_experiments(grid):
         then random points (indefinitely)
     """
     lengths = tuple([len(c) for c in grid.coordinates])
-    max_length = max(lengths)
-    flags = tuple([False for _ in grid.coordinates])
+
+    # center point
+    center_index = [length // 2 for length in lengths]
+    center_point = index_to_point(grid, center_index)
+    yield center_point
+
+    # middle of faces
+    for ii, length in enumerate(lengths):
+        index_lo = [c for c in center_index]
+        index_lo[ii] = 0
+        point_lo = index_to_point(grid, index_lo)
+        yield point_lo
+
+        index_hi = [c for c in center_index]
+        index_hi[ii] = length - 1
+        point_hi = index_to_point(grid, index_hi)
+        yield point_hi
+
+    # corners
+    ndim = len(lengths)
     counter = 0
-    spiral = 0
-
-    while True:
-        if counter >= (1 << sum(flags)):
-            flags, overflow = advance_flags(flags)
-            if overflow:
-                spiral = (spiral + 1) % max_length
-            counter = 0
-
+    while counter < (1 << len(lengths)):
         index = [0 for _ in lengths]
-        bit = sum(flags)
-        for ii, (flag, length) in enumerate(zip(flags, lengths)):
-            if not flag:
-                index[ii] = length // 2
-            else:
-                bit -= 1
-                if counter & (1 << bit) == 0:
-                    index[ii] = spiral
-                else:
-                    index[ii] = length - 1 - spiral
+        for ii, length in enumerate(lengths):
+            mask = 1 << ii
+            if counter & mask != 0:
+                index[ii] = length - 1
         counter += 1
-        point = index_to_point(index)
-        yield tuple(point)
+        point = index_to_point(grid, index)
+        yield point
+
+    # random points
+    while True:
+        index = [randint(0, length-1) for length in lengths]
+        point = index_to_point(grid, index)
+        yield point
 
 if __name__ == "__main__":
 
@@ -127,9 +138,9 @@ if __name__ == "__main__":
     state = MOEAState.doe
     doe = design_of_experiments(grid)
 
-    for _ in range(10):
-        print(next(doe))
+    for _ in range(30):
+        print([round(100*x) for x in next(doe)])
 
     import time
-    time.sleep(10)
+    time.sleep(1)
 
