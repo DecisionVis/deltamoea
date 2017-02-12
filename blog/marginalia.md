@@ -60,3 +60,35 @@ producing offspring we've already sampled?  We could decrease
 DI and try again?  Or we could take a vector from the parent to
 the child and continue stepping along it until we find a point
 that's not taken?
+
+So if we take the strategy of using parent-to-child as a suggestion
+of where to put the child, then we've got a very interesting thing:
+
+Say we do this:
+
+1. Generate offspring using operators.
+2. While already sampled and not at the edge of the space
+    Take another step along the vector from parent to
+    offspring, in index space, with the biggest component
+    equal to delta and the fractional indices accumulated a
+    la bresenham.  (Except with floating point math, I'm not
+    that masochistic.)  (Alternatively, we could saturate at
+    the edge but step all the way to a corner before giving
+    up.  This helps if we have binary variables involved.)
+4. If we found an unsampled offspring, return it, otherwise 
+   generation failed.
+5. If generating offspring fails too many times, we've converged
+   for all intents and purposes.
+   This also goes for random-uniform on the decision space.
+   If it keeps failing, that means we've essentially converged.
+
+
+# Popularchive Layout
+
+Just had an idea about this: whenever we do a sort and
+find ourselves altering a tier of the popularchive, we move
+onto a fresh and untrammeled part of the popularchive and just
+copy over all the rows that need to be copied.
+
+Or we use invalidation flagging.  That works too, with way
+less bookkeeping.
