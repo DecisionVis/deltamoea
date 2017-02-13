@@ -1,0 +1,2 @@
+MAXIMIZE = "maximize"
+MINIMIZE = "minimize"

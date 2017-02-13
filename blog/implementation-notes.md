@@ -173,3 +173,23 @@ allocated by the setup function.  After that it's your
 responsibility to clean up the MOEA state by calling the
 teardown function.  There is no other resource management
 by the library user.
+
+# Top Down Python Version
+
+2017-02-13 11:45
+
+Last night, I wrote my "top-down" version, a template
+algorithm run that exercises the whole API I outlined
+above.  My next step is to implement the next layer
+down.  Some of the next layer down already exists but
+isn't hooked up to the top-down template yet.
+
+So, what's missing?
+
+* decision, objective, constraint, tagalong
+* Problem
+* create_moea_state (this is a big one)
+* return_evaluated_individual
+* get_iterator
+* (iterator as generator)
+* teardown
