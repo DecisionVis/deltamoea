@@ -142,3 +142,34 @@ As a library user, I:
 6.  Call get_rank(0) to get the archive and save it somewhere.
     Or get_rank(i) to get a later rank and save it somewhere
     too.
+    
+# C Interface
+
+```
+state* setup(error* e, problem* p, options* o)
+void teardown(state* s, error* e)
+state* return_evaluated_individual(state* s, error* e, individual* i)
+state* get_sample(state* s, error* e, double* d)
+state* doe(state* s, error* e) // request DOE samples
+void get_iterator(state* s, error* e, individual_iterator* it, rank r)
+void iterator_next(state* s, error* e, individual_iterator* it, individual* i)
+```
+
+That's it in a nutshell.  Any function that changes state,
+returns a state pointer.  Every function produces an
+error code and writes it back to the provided pointer.
+You can choose to ignore the error code, but you have
+to recon with it every single time you call a function.
+We will not guarantee that state pointers never change.
+Furthermore, old state pointers should be assumed to become
+invalid after any state transition.  We handle multiple
+return in the traditional C fashion -- with pointers.
+
+When you use this, you can allocate pretty much everything
+on the stack.  Your problem, your decisions and objectives,
+your individual, your error code, your iterator.  What you
+can't allocate on the stack is MOEA state.  That gets 
+allocated by the setup function.  After that it's your 
+responsibility to clean up the MOEA state by calling the
+teardown function.  There is no other resource management
+by the library user.
