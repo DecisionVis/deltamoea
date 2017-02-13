@@ -1,15 +1,21 @@
-__all__ = ["Structures", "Functions"]
+__all__ = ["Constants", "Structures", "Functions"]
 
-from moeadv.Constants import MAXIMIZE
-from moeadv.Constants import MINIMIZE
-from moeadv.Structures import Decision
-from moeadv.Structures import Objective
-from moeadv.Structures import Constraint
-from moeadv.Structures import Tagalong
-from moeadv.Structures import Problem
-from moeadv.Structures import ArchiveIndividual
-from moeadv.Structures import Individual
-from moeadv.Structures import Rank
-from moeadv.Structures import MOEAState
+from .Constants import MAXIMIZE
+from .Constants import MINIMIZE
+from .Constants import CENTERPOINT
+from .Constants import OFAT
+from .Constants import CORNERS
+from .Constants import COUNT
 
-from moeadv.Functions import create_moea_state
+from .Structures import Decision
+from .Structures import Objective
+from .Structures import Constraint
+from .Structures import Tagalong
+from .Structures import Problem
+from .Structures import ArchiveIndividual
+from .Structures import Individual
+from .Structures import Rank
+from .Structures import MOEAState
+
+from .Functions import create_moea_state
+from .Functions import doe

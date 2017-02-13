@@ -92,3 +92,61 @@ copy over all the rows that need to be copied.
 
 Or we use invalidation flagging.  That works too, with way
 less bookkeeping.
+
+
+# DOE
+
+So I've been fretting about how my DOE is OFAT when a
+fractional factorial design is supposed to be much better.
+I did some googling and found this abstract:
+
+> FRANKLIN and BAILEY (1977) provided an algorithm for
+> construction of fractional factorial designs for estimating
+> a user specified set of factorial effects. Their algorithm
+> is based on a backtrack procedure. This is computer
+> intensive when the number of factors is not small. We
+> propose a stochastic search method called SEF (sequential
+> elimination of factors) algorithm. The SEF algorithm is
+> a simple modification of the exhaustive approach of the
+> Franklin-Bailey algorithm since defining contrasts for the
+> design of interest are chosen stochastically rather than
+> choosing them in a systematic and exhaustive manner. Our
+> experience shows the probability of success of obtaining
+> a required design to be sufficiently large to make this a
+> practical approach. The success probability may be expected
+> to be rather small if the required design is close to a
+> saturated design. We suggest the use of this stochastic
+> alternative particularly when the number of factors is
+> large. This can offer substantial savings in computing
+> time relative to an exhaustive approach. Moreover, if the
+> SEF algorithm fails to produce a design even after several
+> attempts, one can always revert back to the Franklin-Bailey
+> approach.
+> 
+
+Bibtex, if I ever need to look this up:
+
+```
+@article{liao1999stochastic,
+    title={A Stochastic Algorithm for Selecting of Defining Contrasts in Two-Level Experiments},
+    author={Liao, CT and Iyer, HK},
+    journal={Biometrical journal},
+    volume={41},
+    number={6},
+    pages={671--678},
+    year={1999},
+    publisher={Wiley Online Library}
+}
+```
+
+Backtracking is complicated!  100 DVs, which is my
+standard for "a reasonably large number", is basically
+going to kill Franklin- Bailey, and I don't have high
+hopes for SEF either.  In a hilarious turn of events,
+it appears that descendants (SELC) of SEF use GAs to try
+to minimize aliasing!
+
+So, in short, don't worry about fractional factorial
+designs since it's almost always going to be too
+complicated and expensive to find them.
+

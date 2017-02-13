@@ -55,5 +55,7 @@ Rank = namedtuple("Rank", (
 # Algorithm state at some point in time.
 MOEAState = namedtuple("MOEAState", (
     "problem",              # a Problem
-    "_archive",             # a tuple of Ranks
-)
+    "archive",             # a tuple of Ranks
+    "random",              # real-valued [0,1) RNG
+    "randint",             # integer-valued [a, b] RNG
+))

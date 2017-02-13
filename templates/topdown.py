@@ -1,8 +1,15 @@
+from moeadv import MINIMIZE
+from moeadv import MAXIMIZE
+
 from moeadv import Decision
 from moeadv import Objective
+from moeadv import Problem
+
+from moeadv import create_moea_state
+from moeadv import doe
 
 # Top-down view of optimizing a 3,2 DTLZ2 with the new algorithm
- 
+
 decision1 = Decision("decision1", 0.0, 1.0, 0.01)
 decision2 = Decision("decision2", 0.0, 1.0, 0.3)
 decision3 = Decision("decision3", 0.0, 1.0, 1.0) # 0 or 1
@@ -20,6 +27,9 @@ problem = Problem(decisions, objectives, constraints, tagalongs)
 # assume every call could be raising MOEAError
 state = create_moea_state(problem, ranks=100, ranksize=10000)
 
+"""
+
+already_evaluated_individuals = tuple()
 for individual in already_evaluated_individuals:
     state = return_evaluated_individual(state, individual)
 state = doe(state)
@@ -38,6 +48,4 @@ for individual in result_iterator:
     print(individual)
 
 teardown(problem)
-
-
-
+"""
