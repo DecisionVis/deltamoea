@@ -127,7 +127,7 @@ As a library user, I:
 3.  At my option, call return_evaluated_individual, which
     puts evaluated individuals into the MOEAstate.
 4.  At my option, call state_doe to force the MOEA into a
-    DOE state.  If there aren't enough solutions in the
+    DOE state.  If there aren't enough individuals in the
     popularchive, I understand that the MOEA will transition
     into a DOE state anyway.
 5.  Enter main loop.
@@ -193,3 +193,59 @@ So, what's missing?
 * get_iterator
 * (iterator as generator)
 * teardown
+
+# What About Evaluated Individuals With Non-Grid Decisions?
+
+It's entirely possible to return an individual with
+decisions that don't fall on the grid.  What do we do
+with those?
+
+First of all, we'll stipulate that it's up to the users
+to provide on-grid individuals if that's what they want.
+
+We're going to interpret off-grid individuals as if they
+were at the grid point.  Furthermore, we're going to
+discard the decision variable values and convert them
+to indices.  It's important that the user recognizes this.
+If the original values of the decisions are important,
+they must be preserved in tagalongs.
+
+## Why This Might Happen
+
+There are a few circumstances that might lead up to
+a situation like this.
+
+One is a change in sampling resolution.  The user decides
+to increase or decrease sampling resolution and restart
+the MOEA, reusing the old samples.  Unless using an integer
+multiple of the original resolution, the old samples
+won't fall on the new grid.
+
+Another is reuse of external model runs that were done for
+other reasons.  These may have been guess-and-check scenarios,
+or evalutations from DACE or Kriging runs, or what have you.
+The user has the results on hand and wants to use them, and
+we want to take advantage of that.
+
+The third circumstance I can think of is the insertion of
+a local optimizer as a post-evaluation fixup.
+
+In all of these cases it's important for the user to plan
+ahead and preserve the off-grid decision variable values
+as tagalongs, because they will be lost otherwise.
+
+## Pathological Cases
+
+The worst case scenario is downsampling.  In this case
+we have multiple individuals for each grid point.  So even
+though we take care never to generate duplicate samples,
+we have to accept that the user might have perfectly
+legitimate reasons to supply off-grid individuals.
+
+## Strategy
+
+My strategy for off-grid individuals is to keep all of
+them, subject to archive size constraints.  However, they
+can't be allowed to compete with the on-grid individuals
+as if they were equivalent.  I'm still working on how to
+make that happen.

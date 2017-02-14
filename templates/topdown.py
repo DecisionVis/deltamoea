@@ -1,5 +1,6 @@
 from moeadv import MINIMIZE
 from moeadv import MAXIMIZE
+from moeadv import CORNERS
 
 from moeadv import Decision
 from moeadv import Objective
@@ -27,13 +28,18 @@ problem = Problem(decisions, objectives, constraints, tagalongs)
 # assume every call could be raising MOEAError
 state = create_moea_state(problem, ranks=100, ranksize=10000)
 
-"""
-
+# This is only necessary if you have individuals you've already
+# evaluated.  You could delete the following three lines.
 already_evaluated_individuals = tuple()
 for individual in already_evaluated_individuals:
     state = return_evaluated_individual(state, individual)
-state = doe(state)
 
+# Optionally, specify alternative DOE terminating conditions.
+# For the 3,2 DTLZ2 in this example, it does make sense
+# because there are so few decision variables.
+state = doe(state, terminate=CORNERS)
+
+"""
 for nfe in range(10000):
     state, dvs = get_sample(state)
     objs = dtlz2(dvs)

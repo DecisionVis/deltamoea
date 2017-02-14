@@ -4,9 +4,15 @@ from random import randint
 
 from moeadv.Constants import MAXIMIZE
 from moeadv.Constants import MINIMIZE
+from moeadv.Constants import CENTERPOINT
+from moeadv.Constants import OFAT
+from moeadv.Constants import CORNERS
+from moeadv.Constants import RANDOM
+from moeadv.Constants import COUNT
 
 from moeadv.Structures import Rank
 from moeadv.Structures import Individual
+from moeadv.Structures import DOEState
 from moeadv.Structures import MOEAState
 
 def _create_archive(problem, ranks, ranksize):
@@ -82,12 +88,15 @@ def create_moea_state(problem, **kwargs):
     _random = kwargs.get('random', random)
     _randint = kwargs.get('randint', randint)
     archive = _create_archive(problem, ranks, ranksize)
+    # initial DOE state is: do an OFAT DOE
+    doestate = DOEState(CENTERPOINT, OFAT, 0, 0)
 
     state = MOEAState(
         problem,
         archive,
         _random,
-        _randint
+        _randint,
+        doestate
     )
     return state
 
@@ -115,16 +124,35 @@ def doe(state, **kwargs):
 
     keywords:
         terminate (CENTERPOINT, OFAT, CORNERS, COUNT):
-            indicates when to switch from DOE to evolution.
-            Defaults to OFAT, which means 2 * ndv + 1 samples
-            will be generated before evolution starts.  If
-            you have a lot of decision variables and choose
-            CORNERS, you may never finish doing your DOE,
-            but if you have a small number of decision variables
+            indicates stage after which to switch from
+            DOE to evolution. Defaults to OFAT, which
+            means 2 * ndv + 1 samples will be generated
+            before evolution starts.  If you have a lot
+            of decision variables and choose CORNERS,
+            you may never finish doing your DOE, but if
+            you have a small number of decision variables
             it may be worth while.
             If you specify COUNT, then the number of DOE samples
             is determined by the "count" keyword argument.
         count (int): Number of DOE samples to perform, if COUNT
             is specified as a DOE termination condition.
+            Default is 2 * ndv + 1.
     """
+    terminate = kwargs.get("terminate", OFAT)
+    if terminate == COUNT:
+        default_count = 2 * len(state.problem.decisions) + 1
+        count = kwargs.get("count", default_count)
+    else:
+        count = 0
+    old_doestate = state.doestate
+    new_doestate = old_doestate._replace(
+        terminate=terminate,
+        remaining=count)
+    new_state = state._replace(doestate=new_doestate)
+    return new_state
+
+def return_evaluated_individual(state, individual):
+    """
+    Return an MOEAState that accounts for the returned
+    individual.
 

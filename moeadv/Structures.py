@@ -52,10 +52,19 @@ Rank = namedtuple("Rank", (
     "occupancy"     # number of valid individuals present
 ))
 
+# DOE state:
+DOEState = namedtuple("DOEState", (
+    "stage",        # CENTERPOINT, OFAT, CORNERS, RANDOM
+    "terminate",    # CENTERPOINT, OFAT, CORNERS, COUNT
+    "counter",      # int to keep track of where you are in the stage
+    "remaining",    # int to keep track of the remaining COUNT
+))
+
 # Algorithm state at some point in time.
 MOEAState = namedtuple("MOEAState", (
-    "problem",              # a Problem
+    "problem",             # a Problem
     "archive",             # a tuple of Ranks
     "random",              # real-valued [0,1) RNG
     "randint",             # integer-valued [a, b] RNG
+    "doestate",            # a DOEState
 ))

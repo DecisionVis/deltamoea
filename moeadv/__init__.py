@@ -5,6 +5,7 @@ from .Constants import MINIMIZE
 from .Constants import CENTERPOINT
 from .Constants import OFAT
 from .Constants import CORNERS
+from .Constants import RANDOM
 from .Constants import COUNT
 
 from .Structures import Decision
