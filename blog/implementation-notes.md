@@ -249,3 +249,21 @@ them, subject to archive size constraints.  However, they
 can't be allowed to compete with the on-grid individuals
 as if they were equivalent.  I'm still working on how to
 make that happen.
+
+### Change of Heart
+
+Why not?  New strategy: every individual gets to participate
+in the sort.  We're not going to resample already-sampled
+grid points anyway.
+
+### Retention
+
+An option flag should be provided for retaining decision
+variables.  Default behavior will be to discard real values
+and retain only grid points.
+
+# Issued Samples
+
+We should also allocate a list of issued samples for which
+we do not yet have an evaluated individual.  It should probably
+have ranksize members or so.

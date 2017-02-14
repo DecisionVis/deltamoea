@@ -150,3 +150,15 @@ So, in short, don't worry about fractional factorial
 designs since it's almost always going to be too
 complicated and expensive to find them.
 
+# Objective Space Focus
+
+I think this has to do with EA authors' insistence on
+playing by the rules of nonlinear optimization.  Those
+rules say that the way we measure the performance of
+an optimization algorithm is by its objectives.  This
+misses the point due to two levels of uncertainty:
+one is that any computational model of a physical system
+is going to have some degree of uncertainty involved
+in its outputs.  But there's also a higher level of
+uncertainty here, which is that we're not sure we've
+chosen the right objectives in the first place.

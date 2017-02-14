@@ -25,11 +25,14 @@ Problem = namedtuple("Problem", (
 ))
 
 # ArchiveIndividual: A member of the archive, for internal use.
-# Its decisions are index-valued.  Despite having the same
-# field names as the Problem, the values in each of the
-# tuples are just numbers.
+# It retains the grid position of each individual.  Optionally
+# it retains the actual decision variable values as well, but
+# the decisions tuple may be zero-length.
+# Despite having the same field names as the Problem,
+# the values in each of the tuples are just numbers.
 ArchiveIndividual = namedtuple("ArchiveIndividual", (
-    "decisions",    # tuple of indices
+    "grid_position",# tuple of indices
+    "decisions",    # tuple of floats
     "objectives",   # tuple of floats
     "constraints",  # tuple of floats
     "tagalongs",    # tuple of floats
@@ -52,7 +55,7 @@ Rank = namedtuple("Rank", (
     "occupancy"     # number of valid individuals present
 ))
 
-# DOE state:
+# DOE state: state of the ongoing DOE
 DOEState = namedtuple("DOEState", (
     "stage",        # CENTERPOINT, OFAT, CORNERS, RANDOM
     "terminate",    # CENTERPOINT, OFAT, CORNERS, COUNT
@@ -63,6 +66,7 @@ DOEState = namedtuple("DOEState", (
 # Algorithm state at some point in time.
 MOEAState = namedtuple("MOEAState", (
     "problem",             # a Problem
+    "float_values",        # RETAIN or DISCARD floating point decision values
     "archive",             # a tuple of Ranks
     "random",              # real-valued [0,1) RNG
     "randint",             # integer-valued [a, b] RNG

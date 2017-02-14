@@ -4,20 +4,29 @@ from random import randint
 
 from moeadv.Constants import MAXIMIZE
 from moeadv.Constants import MINIMIZE
+
 from moeadv.Constants import CENTERPOINT
 from moeadv.Constants import OFAT
 from moeadv.Constants import CORNERS
 from moeadv.Constants import RANDOM
 from moeadv.Constants import COUNT
 
+from moeadv.Constants import RETAIN
+from moeadv.Constants import DISCARD
+
 from moeadv.Structures import Rank
 from moeadv.Structures import Individual
+from moeadv.Structures import ArchiveIndividual
 from moeadv.Structures import DOEState
 from moeadv.Structures import MOEAState
 
-def _create_archive(problem, ranks, ranksize):
+def _create_archive(problem, float_values, ranks, ranksize):
     # construct bogus individuals to fill the archive
-    bogus_decisions = tuple((999 for _ in problem.decisions))
+    bogus_grid_position = tuple((999 for _ in problem.decisions))
+    if float_values == RETAIN:
+        bogus_decisions = tuple((0.0 for _ in problem.decisions))
+    else:
+        bogus_decisions = tuple()
     bogus_objectives = list()
     # in C, math.h has macros for infinity and nan
     inf = float("inf")
@@ -36,14 +45,15 @@ def _create_archive(problem, ranks, ranksize):
         else:
             bogus_constraints.append(inf)
     bogus_tagalongs = list((0.0 for _ in problem.tagalongs))
-    bogus_individual = Individual(
+    bogus_archive_individual = ArchiveIndividual(
+        bogus_grid_position,
         bogus_decisions,
         bogus_objectives,
         bogus_constraints,
         bogus_tagalongs)
     # Construct an archive full of references to the bogus individual
     archive = tuple((
-        Rank([bogus_individual for _ in range(ranksize)], 0)
+        Rank([bogus_archive_individual for _ in range(ranksize)], 0)
         for _ in range(ranks)
     ))
     return archive
@@ -57,6 +67,26 @@ def create_moea_state(problem, **kwargs):
                      (default 100)
         ranksize (int): number of individuals in a rank
                      (default 10,000)
+        float_values (RETAIN or DISCARD): what to do with decision
+                     variable values.  If RETAIN is selected,
+                     the decision variable values will be stored
+                     along with the grid points of every individual.
+                     If there is a large number of decision variables,
+                     this policy results in greatly increased storage
+                     requirements, and may require a reduction in
+                     ranks or ranksize for the archive to fit in
+                     memory.  RETAIN may be a desirable behavior if
+                     you are doing local optimization or providing
+                     individuals that have been evaluated on a
+                     different grid. 
+                     If DISCARD is selected, the decision variable
+                     values for each individual will not be stored
+                     explicitly, and will be regenerated from the
+                     individual's grid point.  As long as the
+                     individuals provided to the algorithm were
+                     evaluated at grid points in decision space, this
+                     option is lossless and saves a lot of space.
+                     DISCARD is the default for this option.
         random (callable): a real-number generating function,
                      returning a number on the interval [0,1).
                      If none is provided, we fall back on
@@ -83,16 +113,18 @@ def create_moea_state(problem, **kwargs):
     if selected appropriately, at the risk of degrading
     algorithmic performance when ranks overflow.
     """
+    float_values = kwargs.get("float_values", DISCARD)
     ranks = kwargs.get('ranks', 100)
     ranksize = kwargs.get('ranksize', 10000)
     _random = kwargs.get('random', random)
     _randint = kwargs.get('randint', randint)
-    archive = _create_archive(problem, ranks, ranksize)
+    archive = _create_archive(problem, float_values, ranks, ranksize)
     # initial DOE state is: do an OFAT DOE
     doestate = DOEState(CENTERPOINT, OFAT, 0, 0)
 
     state = MOEAState(
         problem,
+        float_values,
         archive,
         _random,
         _randint,
@@ -155,4 +187,5 @@ def return_evaluated_individual(state, individual):
     """
     Return an MOEAState that accounts for the returned
     individual.
+    """
 
