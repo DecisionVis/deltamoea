@@ -62,11 +62,11 @@ instability in the dominance relation.
 
 The most technically successful approach to date has been
 ε-dominance.  Unlike crowding, ε-dominance is a stable
-relationship.  Given two individuals, A and B, their
-dominance relationship will be the same regardless of
-what other individuals are in the search population.
-ε-dominance has allowed MOEAs to optimize problems with
-more than three, and as many as a dozen, objectives.
+relationship.  Given two individuals, their dominance
+relationship will be the same regardless of what other
+individuals are in the search population.  ε-dominance has
+allowed MOEAs to optimize problems with more than three,
+and as many as a dozen, objectives.
 
 ## UDMOEA's Approach to Diversity Maintenance
 
