@@ -162,3 +162,27 @@ is going to have some degree of uncertainty involved
 in its outputs.  But there's also a higher level of
 uncertainty here, which is that we're not sure we've
 chosen the right objectives in the first place.
+
+# Hardware Advances
+
+Archiving all, or at least a very large number of,
+evaluated individuals is possible only because modern
+microcomputers have more main memory by three to four
+orders of magnitude than did those available during the
+early development of MOEAs in the 1990s.  A basic
+assumption held over from that time is that it is
+necessary to discard the results of old evaluations
+to make room for new.  This assumption no longer holds.
+
+# Philosophical Advantages of Gridding the Decision Space
+
+Gridding the decision space has a pronounced advantage
+over gridding the objective space (as in ε-dominance):
+the grid spacing is not tied up with value judgements
+about the objectives.  Instead, it can be chosen to
+reflect the degree of control available over a physical
+system.  Many electrical and mechanical components, for
+example, have their attributies specified to within a
+given tolerance.  Adjusting the values specifying such a
+component by less than the tolerance does not produce
+a practical difference in the design.
