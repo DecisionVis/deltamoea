@@ -67,6 +67,7 @@ def dtlz2(ndv, nobj):
         j = i-1 for the purposes of translation from Deb et al.
             because Python counts zero.
         """
+        assert(all(0.0 <= xi <= 1.0 for xi in xx))
         # To ease translation, always produce jj from ii.
         gg = sum((xx[jj] - 0.5)**2.0
                  for jj in (ii-1 for ii in range(nobj, ndv+1)))

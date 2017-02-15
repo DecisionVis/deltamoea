@@ -23,6 +23,7 @@ from moeadv.Structures import ArchiveIndividual
 from moeadv.Structures import DOEState
 from moeadv.Structures import Axis
 from moeadv.Structures import Grid
+from moeadv.Structures import GridPoint
 from moeadv.Structures import MOEAState
 
 from moeadv.Sorting import sort_into_archive
@@ -88,7 +89,10 @@ def create_moea_state(problem, **kwargs):
     _random = kwargs.get('random', random)
     _randint = kwargs.get('randint', randint)
     grid = _create_grid(problem.decisions)
-    archive = _create_archive(problem, float_values, ranks, ranksize)
+    archive = [_empty_rank(problem, float_values, ranksize)
+               for _ in range(ranks)]
+    rank_A = _empty_rank(problem, float_values, ranksize)
+    rank_B = _empty_rank(problem, float_values, ranksize)
     issued = tuple(
         (tuple((-1 for _ in problem.decisions))
         for _ in range(ranksize)))
@@ -100,6 +104,8 @@ def create_moea_state(problem, **kwargs):
         float_values,
         grid,
         archive,
+        rank_A,
+        rank_B,
         issued,
         _random,
         _randint,
@@ -168,8 +174,9 @@ def return_evaluated_individual(state, individual):
         decisions = individual.decisions
     else:
         decisions = tuple()
-    grid_point = decisions_to_grid_point(state, decisions)
+    grid_point = decisions_to_grid_point(state.grid, individual.decisions)
     archive_individual = ArchiveIndividual(
+        True,
         grid_point,
         decisions,
         individual.objectives,
@@ -185,11 +192,67 @@ def return_evaluated_individual(state, individual):
 def decisions_to_grid_point(grid, decisions):
     """
     grid (Grid): map between the axes and the 
-    decisions (tuple of floats)
+    decisions (tuple of floats): decision variable values
 
-    Returns the grid point corresponding to the decisions.
-    This is a tuple of ints.
+    Returns the GridPoint corresponding to the decisions.
     """
+    indices = list()
+    for axis, delta, value in zip(grid.axes, grid.deltas, decisions):
+        if value <= axis[0]:
+            indices.append(0)
+        elif value >= axis[-1]:
+            indices.append(len(axis) - 1)
+        else:
+            # return whatever index is closest
+            under = int(floor((value - axis[0])/delta))
+            under_value = axis[under]
+            over_value = axis[under + 1]
+            if value - under_value <= over_value - value:
+                indices.append(under)
+            else:
+                indices.append(under + 1)
+    return grid.GridPoint(*indices)
+
+def _dummy_grid_sample(grid):
+    """ generator function, placeholder for selection and
+    variation operators, and DOE, just returns all grid
+    points in no particularly good order. """
+    index = grid.GridPoint(*(0 for _ in grid.axes))
+    while True:
+        yield index
+        new_index = list()
+        overflow = True
+        # treat first index as least significant because
+        # it's easiest that way
+        for ii, axis in zip(index, grid.axes):
+            if overflow:
+                if ii+1 < len(axis):
+                    new_index.append(ii+1)
+                    overflow = False
+                else:
+                    new_index.append(0)
+                    overflow = True
+            else:
+                new_index.append(ii)
+        if overflow:
+            raise StopIteration()
+        index = grid.GridPoint(*new_index)
+
+dgs = None
+def get_sample(state):
+    """
+    state (MOEAState): current algorithm state
+
+    Returns a new MOEAState and a sample in decision space.
+    """
+    # bootstrapping the algorithm: for now use grid sampling as
+    # a placeholder
+    global dgs
+    if dgs is None:
+        dgs = _dummy_grid_sample(state.grid)
+    grid_point = next(dgs)
+    sample = state.grid.Sample(*(a[i] for a, i in zip(state.grid.axes, grid_point)))
+    return state, sample
 
 def _create_grid(decisions):
     """
@@ -199,7 +262,7 @@ def _create_grid(decisions):
     """
     # Defining a new namedtuple here as a convenience, and
     # mainly so that it's readable in debugging prints.
-    _Grid = namedtuple("Grid", (d.name for d in decisions))
+    _Axes = namedtuple("Axes", (d.name for d in decisions))
 
     axes = list()
     for decision in decisions:
@@ -227,17 +290,24 @@ def _create_grid(decisions):
             values[-1] = decision.upper
         axis = Axis(values)
         axes.append(axis)
-    return _Grid(*axes)
+    _Deltas = namedtuple("Deltas", (d.name for d in decisions))
+    grid = Grid(
+        _Axes(*axes),
+        _Deltas(*(d.delta for d in decisions)),
+        namedtuple("GridPoint", (d.name for d in decisions)),
+        namedtuple("Sample", (d.name for d in decisions))
+    )
+    return grid
 
-def _create_archive(problem, float_values, ranks, ranksize):
-    # construct bogus individuals to fill the archive
+def _empty_rank(problem, float_values, ranksize):
+    # construct bogus individuals to fill the rank
     bogus_grid_point = tuple((999 for _ in problem.decisions))
     if float_values == RETAIN:
         bogus_decisions = tuple((0.0 for _ in problem.decisions))
     else:
         bogus_decisions = tuple()
     bogus_objectives = list()
-    # in C, math.h has macros for infinity and nan
+    # in C99, math.h has macros for infinity and nan
     inf = float("inf")
     ninf = -inf
     # Bogus individuals should never dominate true individuals.
@@ -255,15 +325,12 @@ def _create_archive(problem, float_values, ranks, ranksize):
             bogus_constraints.append(inf)
     bogus_tagalongs = list((0.0 for _ in problem.tagalongs))
     bogus_archive_individual = ArchiveIndividual(
+        False, # and bogus individuals are invalid
         bogus_grid_point,
         bogus_decisions,
         bogus_objectives,
         bogus_constraints,
         bogus_tagalongs)
-    # Construct an archive full of references to the bogus individual
-    archive = tuple((
-        Rank([bogus_archive_individual for _ in range(ranksize)], 0)
-        for _ in range(ranks)
-    ))
-    return archive
+    return Rank([bogus_archive_individual for _ in range(ranksize)], 0)
+
 

@@ -12,3 +12,8 @@ COUNT = "count"
 # Decision value retention policy
 RETAIN = "retain"
 DISCARD = "discard"
+
+# Comparison Result
+LEFT_DOMINATES = "left dominates"
+RIGHT_DOMINATES = "right dominates"
+NEITHER_DOMINATES = "neither dominates"

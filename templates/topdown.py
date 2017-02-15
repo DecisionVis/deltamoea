@@ -5,12 +5,17 @@ from moeadv import CORNERS
 from moeadv import Decision
 from moeadv import Objective
 from moeadv import Problem
+from moeadv import Individual
 
 from moeadv import create_moea_state
 from moeadv import doe
+from moeadv import get_sample
+from moeadv import return_evaluated_individual
+
+from problems.problems import dtlz2
 
 # Top-down view of optimizing a 3,2 DTLZ2 with the new algorithm
-
+evaluate = dtlz2(3, 2)
 decision1 = Decision("decision1", 0.0, 1.0, 0.01)
 decision2 = Decision("decision2", 0.0, 1.0, 0.3)
 decision3 = Decision("decision3", 0.0, 1.0, 1.0) # 0 or 1
@@ -39,13 +44,21 @@ for individual in already_evaluated_individuals:
 # because there are so few decision variables.
 state = doe(state, terminate=CORNERS)
 
-"""
-for nfe in range(10000):
-    state, dvs = get_sample(state)
-    objs = dtlz2(dvs)
+for nfe in range(3):
+    try:
+        state, dvs = get_sample(state)
+    except StopIteration:
+        break
+    objs = evaluate(dvs)
     individual = Individual(dvs, objs, tuple(), tuple())
     state = return_evaluated_individual(state, individual)
 
+rank0 = state.archive[0]
+for archive_individual in rank0.individuals:
+    if archive_individual.valid:
+        print(archive_individual)
+
+"""
 result_iterator = get_iterator(state, 0)
 
 # the proposed C approach is very non-Pythonic, so we use a

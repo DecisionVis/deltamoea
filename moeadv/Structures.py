@@ -31,6 +31,7 @@ Problem = namedtuple("Problem", (
 # Despite having the same field names as the Problem,
 # the values in each of the tuples are just numbers.
 ArchiveIndividual = namedtuple("ArchiveIndividual", (
+    "valid",        # bool: whether the individual is valid
     "grid_point",   # tuple of indices
     "decisions",    # tuple of floats
     "objectives",   # tuple of floats
@@ -66,16 +67,25 @@ DOEState = namedtuple("DOEState", (
 # Axis: an axis of the sampling grid is a tuple of decision
 # values for a decision
 Axis = tuple
-# Grid: a tuple of Axes determining the sampling grid
-Grid = tuple
+# GridPoint: a tuple of indices into the sampling grid
+GridPoint = tuple
+# Grid: the definition of the grid
+Grid = namedtuple("Grid", (
+    "axes",         # a tuple of Axes
+    "deltas",       # a tuple of floats (to speed conversions)
+    "GridPoint",    # a namedtuple type to use for the grid points
+    "Sample",       # a namedtuple type to use for samples in decision space
+))
 
 # Algorithm state at some point in time.
 MOEAState = namedtuple("MOEAState", (
     "problem",             # a Problem
     "float_values",        # RETAIN or DISCARD floating point decision values
     "grid",                # a Grid
-    "archive",             # a tuple of Ranks
-    "issued",              # a tuple of samples in index space
+    "archive",             # a list of Ranks
+    "rank_A",              # an extra Rank, needed for sorting
+    "rank_B",              # an extra Rank, needed for sorting
+    "issued",              # a list of samples in index space
     "random",              # real-valued [0,1) RNG
     "randint",             # integer-valued [a, b] RNG
     "doestate",            # a DOEState
