@@ -1,4 +1,7 @@
 from collections import namedtuple
+
+from math import floor
+
 from random import random
 from random import randint
 
@@ -18,45 +21,11 @@ from moeadv.Structures import Rank
 from moeadv.Structures import Individual
 from moeadv.Structures import ArchiveIndividual
 from moeadv.Structures import DOEState
+from moeadv.Structures import Axis
+from moeadv.Structures import Grid
 from moeadv.Structures import MOEAState
 
-def _create_archive(problem, float_values, ranks, ranksize):
-    # construct bogus individuals to fill the archive
-    bogus_grid_position = tuple((999 for _ in problem.decisions))
-    if float_values == RETAIN:
-        bogus_decisions = tuple((0.0 for _ in problem.decisions))
-    else:
-        bogus_decisions = tuple()
-    bogus_objectives = list()
-    # in C, math.h has macros for infinity and nan
-    inf = float("inf")
-    ninf = -inf
-    # Bogus individuals should never dominate true individuals.
-    for objective in problem.objectives:
-        if objective.sense == MAXIMIZE:
-            bogus_objectives.append(ninf)
-        else:
-            bogus_objectives.append(inf)
-    # Nor should they appear even remotely feasible.
-    bogus_constraints = list()
-    for constraint in problem.constraints:
-        if constraint.sense == MAXIMIZE:
-            bogus_constraints.append(ninf)
-        else:
-            bogus_constraints.append(inf)
-    bogus_tagalongs = list((0.0 for _ in problem.tagalongs))
-    bogus_archive_individual = ArchiveIndividual(
-        bogus_grid_position,
-        bogus_decisions,
-        bogus_objectives,
-        bogus_constraints,
-        bogus_tagalongs)
-    # Construct an archive full of references to the bogus individual
-    archive = tuple((
-        Rank([bogus_archive_individual for _ in range(ranksize)], 0)
-        for _ in range(ranks)
-    ))
-    return archive
+from moeadv.Sorting import sort_into_archive
 
 def create_moea_state(problem, **kwargs):
     """
@@ -118,14 +87,20 @@ def create_moea_state(problem, **kwargs):
     ranksize = kwargs.get('ranksize', 10000)
     _random = kwargs.get('random', random)
     _randint = kwargs.get('randint', randint)
+    grid = _create_grid(problem.decisions)
     archive = _create_archive(problem, float_values, ranks, ranksize)
+    issued = tuple(
+        (tuple((-1 for _ in problem.decisions))
+        for _ in range(ranksize)))
     # initial DOE state is: do an OFAT DOE
     doestate = DOEState(CENTERPOINT, OFAT, 0, 0)
 
     state = MOEAState(
         problem,
         float_values,
+        grid,
         archive,
+        issued,
         _random,
         _randint,
         doestate
@@ -185,7 +160,110 @@ def doe(state, **kwargs):
 
 def return_evaluated_individual(state, individual):
     """
-    Return an MOEAState that accounts for the returned
-    individual.
+    Return an MOEAState that accounts for the provided
+    Individual.
     """
+    # produce an ArchiveIndividual from the Individual
+    if state.float_values == RETAIN:
+        decisions = individual.decisions
+    else:
+        decisions = tuple()
+    grid_point = decisions_to_grid_point(state, decisions)
+    archive_individual = ArchiveIndividual(
+        grid_point,
+        decisions,
+        individual.objectives,
+        individual.constraints,
+        individual.tagalongs)
+
+    # sort the ArchiveIndividual into the archive
+    state = sort_into_archive(state, archive_individual)
+
+    # return the state
+    return state
+
+def decisions_to_grid_point(grid, decisions):
+    """
+    grid (Grid): map between the axes and the 
+    decisions (tuple of floats)
+
+    Returns the grid point corresponding to the decisions.
+    This is a tuple of ints.
+    """
+
+def _create_grid(decisions):
+    """
+    decisions: tuple of Decisions
+
+    Returns a Grid corresponding to the Decisions.
+    """
+    # Defining a new namedtuple here as a convenience, and
+    # mainly so that it's readable in debugging prints.
+    _Grid = namedtuple("Grid", (d.name for d in decisions))
+
+    axes = list()
+    for decision in decisions:
+        decision_range = decision.upper - decision.lower
+        number_of_intervals = int(floor(decision_range / decision.delta))
+        span = number_of_intervals * decision.delta
+        if span + decision.delta - decision_range < 1e-6 * decision.delta:
+            # If floor cut us off really close to the upper limit,
+            # we need to include it.
+            corrected_number_of_intervals = number_of_intervals + 1
+            lower = decision.lower
+        else:
+            # Divide the slop by two and use it as a margin.
+            corrected_number_of_intervals = number_of_intervals
+            lower = decision.lower + 0.5 * (decision_range - span)
+        # accumulate grid values
+        values = list()
+        value = lower
+        for ii in range(corrected_number_of_intervals + 1):
+            values.append(value)
+            value += decision.delta
+        # correct last value to exactly the upper limit because
+        # floating point math can accumulate errors
+        if values[-1] > decision.upper:
+            values[-1] = decision.upper
+        axis = Axis(values)
+        axes.append(axis)
+    return _Grid(*axes)
+
+def _create_archive(problem, float_values, ranks, ranksize):
+    # construct bogus individuals to fill the archive
+    bogus_grid_point = tuple((999 for _ in problem.decisions))
+    if float_values == RETAIN:
+        bogus_decisions = tuple((0.0 for _ in problem.decisions))
+    else:
+        bogus_decisions = tuple()
+    bogus_objectives = list()
+    # in C, math.h has macros for infinity and nan
+    inf = float("inf")
+    ninf = -inf
+    # Bogus individuals should never dominate true individuals.
+    for objective in problem.objectives:
+        if objective.sense == MAXIMIZE:
+            bogus_objectives.append(ninf)
+        else:
+            bogus_objectives.append(inf)
+    # Nor should they appear even remotely feasible.
+    bogus_constraints = list()
+    for constraint in problem.constraints:
+        if constraint.sense == MAXIMIZE:
+            bogus_constraints.append(ninf)
+        else:
+            bogus_constraints.append(inf)
+    bogus_tagalongs = list((0.0 for _ in problem.tagalongs))
+    bogus_archive_individual = ArchiveIndividual(
+        bogus_grid_point,
+        bogus_decisions,
+        bogus_objectives,
+        bogus_constraints,
+        bogus_tagalongs)
+    # Construct an archive full of references to the bogus individual
+    archive = tuple((
+        Rank([bogus_archive_individual for _ in range(ranksize)], 0)
+        for _ in range(ranks)
+    ))
+    return archive
 
