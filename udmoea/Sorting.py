@@ -97,6 +97,11 @@ def sort_into_archive(state, archive_individual):
 
         rank_into += 1
 
+    # insert all remaining overflow in the last rank
+    last_rank = archive[-1]
+    last_rank, rank_A = fill_rank_from_rank(last_rank, rank_A)
+    archive[-1] = last_rank
+
     state = state._replace(
         rank_A=rank_A,
         rank_B=rank_B,
