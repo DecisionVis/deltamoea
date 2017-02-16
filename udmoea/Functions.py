@@ -5,28 +5,28 @@ from math import floor
 from random import random
 from random import randint
 
-from moeadv.Constants import MAXIMIZE
-from moeadv.Constants import MINIMIZE
+from .Constants import MAXIMIZE
+from .Constants import MINIMIZE
 
-from moeadv.Constants import CENTERPOINT
-from moeadv.Constants import OFAT
-from moeadv.Constants import CORNERS
-from moeadv.Constants import RANDOM
-from moeadv.Constants import COUNT
+from .Constants import CENTERPOINT
+from .Constants import OFAT
+from .Constants import CORNERS
+from .Constants import RANDOM
+from .Constants import COUNT
 
-from moeadv.Constants import RETAIN
-from moeadv.Constants import DISCARD
+from .Constants import RETAIN
+from .Constants import DISCARD
 
-from moeadv.Structures import Rank
-from moeadv.Structures import Individual
-from moeadv.Structures import ArchiveIndividual
-from moeadv.Structures import DOEState
-from moeadv.Structures import Axis
-from moeadv.Structures import Grid
-from moeadv.Structures import GridPoint
-from moeadv.Structures import MOEAState
+from .Structures import Rank
+from .Structures import Individual
+from .Structures import ArchiveIndividual
+from .Structures import DOEState
+from .Structures import Axis
+from .Structures import Grid
+from .Structures import GridPoint
+from .Structures import MOEAState
 
-from moeadv.Sorting import sort_into_archive
+from .Sorting import sort_into_archive
 
 def create_moea_state(problem, **kwargs):
     """
@@ -175,12 +175,28 @@ def return_evaluated_individual(state, individual):
     else:
         decisions = tuple()
     grid_point = decisions_to_grid_point(state.grid, individual.decisions)
+    # ArchiveIndividuals always sort with < and we reverse the transformation
+    # when returning Individuals.
+    problem = state.problem
+    objectives = list()
+    for ob, value in zip(problem.objectives, individual.objectives):
+        if ob.sense == MINIMIZE:
+            objectives.append(value)
+        else:
+            objectives.append(-value)
+    # Ditto constraints
+    constraints = list()
+    for co, value in zip(problem.constraints, individual.constraints):
+        if co.sense == MINIMIZE:
+            constraints.append(value)
+        else:
+            constraints.append(-value)
     archive_individual = ArchiveIndividual(
         True,
         grid_point,
         decisions,
-        individual.objectives,
-        individual.constraints,
+        tuple(objectives),
+        tuple(constraints),
         individual.tagalongs)
 
     # sort the ArchiveIndividual into the archive

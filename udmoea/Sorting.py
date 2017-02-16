@@ -1,8 +1,8 @@
-from moeadv.Constants import MAXIMIZE
-from moeadv.Constants import MINIMIZE
-from moeadv.Constants import LEFT_DOMINATES
-from moeadv.Constants import RIGHT_DOMINATES
-from moeadv.Constants import NEITHER_DOMINATES
+from .Constants import MAXIMIZE
+from .Constants import MINIMIZE
+from .Constants import LEFT_DOMINATES
+from .Constants import RIGHT_DOMINATES
+from .Constants import NEITHER_DOMINATES
 
 def sort_into_archive(state, archive_individual):
     archive = state.archive
@@ -49,15 +49,11 @@ def sort_into_archive(state, archive_individual):
                 # insert it into rank_B
                 # adjust rank occupancy
                 if dominance == LEFT_DOMINATES:
-                    rank_B.individuals[rank_B.occupancy] = i_ind
-                    rank_B = rank_B._replace(occupancy=rank_B.occupancy + 1)
-                    into.individuals[ii] = i_ind._replace(valid=False)
-                    into = into._replace(occupancy=into.occupancy - 1)
+                    rank_B, into = move_individual(
+                        rank_B, rank_B.occupancy, into, ii)
                 elif dominance == RIGHT_DOMINATES:
-                    rank_B.individuals[rank_B.occupancy] = a_ind
-                    rank_B = rank_B._replace(occupancy=rank_B.occupancy + 1)
-                    rank_A.individuals[ai] = a_ind._replace(valid=False)
-                    rank_A = rank_A._replace(occupancy=rank_A.occupancy - 1)
+                    rank_B, rank_A = move_individual(
+                        rank_B, rank_B.occupancy, rank_A, ai)
                     # break if rank A individual was dominated and go
                     # to next rank A individual
                     break
@@ -132,14 +128,36 @@ def fill_rank_from_rank(destination, source):
             if destination.individuals[di].valid:
                 di += 1
             else:
-                destination.individuals[di] = s_ind
-                destination = destination._replace(occupancy=destination.occupancy + 1)
-                source.individuals[si] = s_ind._replace(valid=False)
-                source = source._replace(occupancy=source.occupancy - 1)
+                destination, source = move_individual(
+                    destination, di, source, si)
                 break
         if di >= len(destination.individuals):
             break
     return destination, source
+
+def move_individual(destination_rank, destination_index, source_rank, source_index):
+    """
+    Move an archive individual from one rank to another rank.
+    This function does not check bounds or make any other safety guarantees.
+    This function assumes that the individual is valid and adjusts
+    occupancy accordingly.
+
+    destination_rank (Rank)
+    destination_index (int): index into destination_rank
+    source_rank (Rank)
+    source_index (int): index into source_rank
+
+    Returns an updated destination rank and source rank.
+    """
+    individual = source_rank.individuals[source_index]
+    destination_rank.individuals[destination_index] = individual
+    destination_rank = destination_rank._replace(
+        occupancy=destination_rank.occupancy + 1)
+    source_rank.individuals[source_index] = individual._replace(
+        valid=False)
+    source_rank = source_rank._replace(
+        occupancy=source_rank.occupancy - 1)
+    return destination_rank, source_rank
 
 def _compare(problem, left, right):
     """
@@ -149,17 +167,33 @@ def _compare(problem, left, right):
     """
     dleft = True
     dright = True
-    for obj, yl, yr in zip(problem.objectives, left.objectives, right.objectives):
-        if obj.sense == MAXIMIZE:
-            if yl < yr:
-                dleft = False
-            elif yr < yl:
-                dright = False
-        else: # MINIMIZE
-            if yl > yr:
-                dleft = False
-            elif yr > yl:
-                dright = False
+    # compare 
+    for zl, zr in zip(left.constraints, right.constraints):
+        if zl <= 0 and zr <= 0:
+            # For constraints, we are indifferent to values
+            # less than zero.
+            continue
+        if dleft and zl > zr:
+            dleft = False
+        elif dright and zr > zl:
+            dright = False
+        if not (dleft or dright):
+            # Early return!! No point in continuing because both
+            # individuals violate constraints and neither one
+            # dominates the other.
+            return NEITHER_DOMINATES
+    if dleft and not dright:
+        return LEFT_DOMINATES
+    if dright and not dleft:
+        return RIGHT_DOMINATES
+
+    # Both individuals are feasible, so compare objectives.
+    for yl, yr in zip(left.objectives, right.objectives):
+        # minimize everything
+        if yl > yr:
+            dleft = False
+        elif yr > yl:
+            dright = False
         if not (dleft or dright):
             # early return!!
             return NEITHER_DOMINATES

@@ -1,4 +1,4 @@
-# Objective sense
+# Objective / constraint sense
 MAXIMIZE = "maximize"
 MINIMIZE = "minimize"
 
