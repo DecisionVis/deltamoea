@@ -1,6 +1,10 @@
+import sys
+
 from moeadv import MINIMIZE
 from moeadv import MAXIMIZE
 from moeadv import CORNERS
+from moeadv import RETAIN
+from moeadv import DISCARD
 
 from moeadv import Decision
 from moeadv import Objective
@@ -11,15 +15,18 @@ from moeadv import create_moea_state
 from moeadv import doe
 from moeadv import get_sample
 from moeadv import return_evaluated_individual
+from moeadv import get_iterator
 
 from problems.problems import dtlz2
+from problems.problems import dtlz2_rotated
 
 # Top-down view of optimizing a 3,2 DTLZ2 with the new algorithm
-evaluate = dtlz2(3, 2)
-decision1 = Decision("decision1", 0.0, 1.0, 0.01)
+evaluate = dtlz2_rotated(4, 2)
+decision1 = Decision("decision1", 0.0, 1.0, 1.0) # 0 or 1
 decision2 = Decision("decision2", 0.0, 1.0, 0.3)
-decision3 = Decision("decision3", 0.0, 1.0, 1.0) # 0 or 1
-decisions = (decision1, decision2, decision3)
+decision3 = Decision("decision3", 0.0, 1.0, 0.01)
+decision4 = Decision("decision4", 0.0, 1.0, 0.03)
+decisions = (decision1, decision2, decision3, decision4)
 
 objective1 = Objective("objective1", MINIMIZE)
 objective2 = Objective("objective2", MINIMIZE)
@@ -31,7 +38,7 @@ tagalongs = tuple()
 problem = Problem(decisions, objectives, constraints, tagalongs)
 
 # assume every call could be raising MOEAError
-state = create_moea_state(problem, ranks=100, ranksize=10000)
+state = create_moea_state(problem, ranks=100, ranksize=10000, float_values=DISCARD)
 
 # This is only necessary if you have individuals you've already
 # evaluated.  You could delete the following three lines.
@@ -44,27 +51,29 @@ for individual in already_evaluated_individuals:
 # because there are so few decision variables.
 state = doe(state, terminate=CORNERS)
 
-for nfe in range(3):
+for nfe in range(10000):
     try:
         state, dvs = get_sample(state)
     except StopIteration:
         break
+    if nfe % 500 == 0:
+        sys.stderr.write('.')
     objs = evaluate(dvs)
     individual = Individual(dvs, objs, tuple(), tuple())
     state = return_evaluated_individual(state, individual)
 
-rank0 = state.archive[0]
-for archive_individual in rank0.individuals:
-    if archive_individual.valid:
-        print(archive_individual)
-
+print("rank,{},{}".format(
+    ",".join(d.name for d in problem.decisions),
+    ",".join(o.name for o in problem.objectives)))
+for ii in range(len(state.archive)):
+    # the proposed C approach is very non-Pythonic, so we use a
+    # generator here
+    for individual in get_iterator(state, ii):
+        print("{},{},{}".format(
+            ii,
+            ",".join("{:.2f}".format(d) for d in individual.decisions),
+            ",".join("{:.2f}".format(o) for o in individual.objectives)
+        ))
 """
-result_iterator = get_iterator(state, 0)
-
-# the proposed C approach is very non-Pythonic, so we use a
-# generator here
-for individual in result_iterator:
-    print(individual)
-
 teardown(problem)
 """

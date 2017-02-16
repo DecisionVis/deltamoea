@@ -18,19 +18,19 @@ def sort_into_archive(state, archive_individual):
 
     rank_into = 0
     # loop over archive ranks
-    while rank_A.occupancy > 0:
+    while rank_A.occupancy > 0 and rank_into + 1 < len(archive):
         into = archive[rank_into]
-        print("----")
-        print("before: rank {}".format(rank_into))
-        _print_rank(into)
-        print("before: rank_A")
-        _print_rank(rank_A)
-        print("before: rank_B")
-        _print_rank(rank_B)
+        # print("----")
+        # print("before: rank {}".format(rank_into))
+        # _print_rank(into)
+        # print("before: rank_A")
+        # _print_rank(rank_A)
+        # print("before: rank_B")
+        # _print_rank(rank_B)
         # loop over rank A
         a_remaining = rank_A.occupancy
         for ai, a_ind in enumerate(rank_A.individuals):
-            print("processing {} from rank A: {}".format(ai, a_ind))
+            # print("processing {} from rank A: {}".format(ai, a_ind))
             if a_remaining <= 0:
                 break
             if not a_ind.valid:
@@ -61,46 +61,45 @@ def sort_into_archive(state, archive_individual):
                     # break if rank A individual was dominated and go
                     # to next rank A individual
                     break
-        print("after comparisons: rank {}".format(rank_into))
-        _print_rank(into)
-        print("after comparisons: rank_A")
-        _print_rank(rank_A)
-        print("after comparisons: rank_B")
-        _print_rank(rank_B)
+        # print("after comparisons: rank {}".format(rank_into))
+        # _print_rank(into)
+        # print("after comparisons: rank_A")
+        # _print_rank(rank_A)
+        # print("after comparisons: rank_B")
+        # _print_rank(rank_B)
         # insert valid individuals from rank A in "into"
         into, rank_A = fill_rank_from_rank(into, rank_A)
 
-        print("after fill: rank {}".format(rank_into))
-        _print_rank(into)
-        print("after fill: rank_A")
-        _print_rank(rank_A)
-        print("after fill: rank_B")
-        _print_rank(rank_B)
+        # print("after fill: rank {}".format(rank_into))
+        # _print_rank(into)
+        # print("after fill: rank_A")
+        # _print_rank(rank_A)
+        # print("after fill: rank_B")
+        # _print_rank(rank_B)
 
         # insert overflow in rank B
         rank_B, rank_A = fill_rank_from_rank(rank_B, rank_A)
 
-        print("after overflow: rank {}".format(rank_into))
-        _print_rank(into)
-        print("after overflow: rank_A")
-        _print_rank(rank_A)
-        print("after overflow: rank_B")
-        _print_rank(rank_B)
+        # print("after overflow: rank {}".format(rank_into))
+        # _print_rank(into)
+        # print("after overflow: rank_A")
+        # _print_rank(rank_A)
+        # print("after overflow: rank_B")
+        # _print_rank(rank_B)
 
         # swap rank A and rank B
         rank_B, rank_A = rank_A, rank_B
         # update the archive
         archive[rank_into] = into
 
-        print("after: rank {}".format(rank_into))
-        _print_rank(into)
-        print("after: rank_A")
-        _print_rank(rank_A)
-        print("after: rank_B")
-        _print_rank(rank_B)
+        # print("after: rank {}".format(rank_into))
+        # _print_rank(into)
+        # print("after: rank_A")
+        # _print_rank(rank_A)
+        # print("after: rank_B")
+        # _print_rank(rank_B)
 
-        if rank_A.occupancy == 0:
-            break
+        rank_into += 1
 
     state = state._replace(
         rank_A=rank_A,

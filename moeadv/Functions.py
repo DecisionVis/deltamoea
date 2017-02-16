@@ -213,6 +213,22 @@ def decisions_to_grid_point(grid, decisions):
                 indices.append(under + 1)
     return grid.GridPoint(*indices)
 
+def get_iterator(state, rank_number):
+    """
+    Generator that iterates over the solutions in a rank.
+    """
+    axes = state.grid.axes
+    for archive_individual in state.archive[rank_number].individuals:
+        if archive_individual.valid:
+            sample = state.grid.Sample(
+                *(a[i] for a, i in zip(axes, archive_individual.grid_point)))
+            individual = Individual(
+                sample,
+                archive_individual.objectives,
+                archive_individual.constraints,
+                archive_individual.tagalongs)
+            yield individual
+
 def _dummy_grid_sample(grid):
     """ generator function, placeholder for selection and
     variation operators, and DOE, just returns all grid

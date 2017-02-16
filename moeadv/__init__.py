@@ -24,3 +24,4 @@ from .Functions import create_moea_state
 from .Functions import doe
 from .Functions import return_evaluated_individual
 from .Functions import get_sample
+from .Functions import get_iterator
