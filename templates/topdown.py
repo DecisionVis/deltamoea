@@ -1,21 +1,21 @@
 import sys
 
-from moeadv import MINIMIZE
-from moeadv import MAXIMIZE
-from moeadv import CORNERS
-from moeadv import RETAIN
-from moeadv import DISCARD
+from udmoea import MINIMIZE
+from udmoea import MAXIMIZE
+from udmoea import CORNERS
+from udmoea import RETAIN
+from udmoea import DISCARD
 
-from moeadv import Decision
-from moeadv import Objective
-from moeadv import Problem
-from moeadv import Individual
+from udmoea import Decision
+from udmoea import Objective
+from udmoea import Problem
+from udmoea import Individual
 
-from moeadv import create_moea_state
-from moeadv import doe
-from moeadv import get_sample
-from moeadv import return_evaluated_individual
-from moeadv import get_iterator
+from udmoea import create_moea_state
+from udmoea import doe
+from udmoea import get_sample
+from udmoea import return_evaluated_individual
+from udmoea import get_iterator
 
 from problems.problems import dtlz2
 from problems.problems import dtlz2_rotated
