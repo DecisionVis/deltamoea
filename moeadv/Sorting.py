@@ -1,3 +1,9 @@
+from moeadv.Constants import MAXIMIZE
+from moeadv.Constants import MINIMIZE
+from moeadv.Constants import LEFT_DOMINATES
+from moeadv.Constants import RIGHT_DOMINATES
+from moeadv.Constants import NEITHER_DOMINATES
+
 def sort_into_archive(state, archive_individual):
     archive = state.archive
 
@@ -131,6 +137,37 @@ def fill_rank_from_rank(destination, source):
                 destination = destination._replace(occupancy=destination.occupancy + 1)
                 source.individuals[si] = s_ind._replace(valid=False)
                 source = source._replace(occupancy=source.occupancy - 1)
+                break
         if di >= len(destination.individuals):
             break
     return destination, source
+
+def _compare(problem, left, right):
+    """
+    problem (Problem): used for determining which comparisons to use
+    left (Individual)
+    right (Individual)
+    """
+    dleft = True
+    dright = True
+    for obj, yl, yr in zip(problem.objectives, left.objectives, right.objectives):
+        if obj.sense == MAXIMIZE:
+            if yl < yr:
+                dleft = False
+            elif yr < yl:
+                dright = False
+        else: # MINIMIZE
+            if yl > yr:
+                dleft = False
+            elif yr > yl:
+                dright = False
+        if not (dleft or dright):
+            # early return!!
+            return NEITHER_DOMINATES
+    if dleft and not dright:
+        return LEFT_DOMINATES
+    elif dright and not dleft:
+        return RIGHT_DOMINATES
+    else:
+        return NEITHER_DOMINATES
+
