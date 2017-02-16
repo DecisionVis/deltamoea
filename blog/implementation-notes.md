@@ -398,4 +398,83 @@ Rank0.  How does this get us in trouble?  If Rank0
 is small, it inhbits diversity.  The point is that
 slightly-dominated individuals may still be quite good.
 Take the worst-case scenario, where we have a single
-objective and ranks of a single individual.
+objective and ranks of a single individual in size.
+SBX gives us zero diversity, so we have to rely on the
+neighborhood scanning approach to find unsampled grid
+points.  (Another reason non-gridded SBX has to have
+PM to help it out.)
+
+Suppose we selected the first parent always from Rank0,
+but the second parent from any rank with equal probability.
+I don't like that because it seems likely to waste an
+evaluation.  But suppose again.  Is this really all that
+different from the UM procedure that gives us such good
+results in Borg when doing restarts?  You stay close to
+the archive solutions, except in one variable.  It has the
+further advantage of being biased towards feasibility,
+especially if we limit selection to ranks that are as
+feasible as rank 0.  So if rank 0 is infeasible, we
+consider all ranks.  If rank 0 is feasible and rank 1
+is infeasible, we only select from rank 0.
+
+So take this procedure:
+
+1. Determine the level of feasibility in rank 0.
+2. Find all ranks with the same level of feasibility.
+   Their number is x.
+3. For each rank in the set of equi-feasible ranks,
+   indexed r, assign a non-normalized probability q=x-r.
+4. Normalize the probabilities.
+
+Take an example:
+
+1. Suppose we have rank 0 feasible
+2. And rank 10 as the first infeasible rank. x=10
+3. r    q
+   0    10
+   1    9
+   2    8
+   ...
+   9    1
+   >9   0
+4.  sum(q) = 55
+   r    p
+   0    10 / 55 = 2 / 11
+   1    9 / 55
+   2    8 / 55
+   ...
+   9    1 / 55
+
+So clearly this is not a parameter-free exercise because
+the formula for q could take any form in x and r.  Nor is
+there any particular justification for this functional form
+other than that the linear decrease in probability feels
+"reasonable" to me.
+
+But accepting that, with possibly a special case for the
+situation where rank 0 has the only feasible individual
+in the whole archive, this approach is something I'm
+comfortable with.  As the number of ranks increases,
+the probability drops off more slowly.  (The ramp could
+easily be changed by adding a constant term to q, as well.)
+For instance, with 50 ranks instead, rank0 gets 50 / 1275,
+(about 4%) rank 1 gets 49/1275, and so on.  A much slower
+ramp and a much more evenly distributed probability.
+
+As I said above about Borg's restart behavior, pretty
+wild variation in a single decision actually produces
+generally useful results.  In fact, I can't help wondering
+if this is part of Borg's secret sauce.  Its restarts are,
+almost by accident, making a sparsity of effects
+assumption.
+
+So there's my selection-and-variation procedure:
+
+1. Select parent A from rank 0, always.
+2. Select parent B as above, from the equi-feasible ranks,
+   with a linear probability ramp.
+3. Decide how many variables to do.
+4. Choose variables
+5. Do SBX on those variables, with the unmodified variables
+   taking their values from parent A and the modified variables
+   ending up close to parent B.
