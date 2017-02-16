@@ -234,15 +234,31 @@ def get_iterator(state, rank_number):
     Generator that iterates over the solutions in a rank.
     """
     axes = state.grid.axes
-    for archive_individual in state.archive[rank_number].individuals:
-        if archive_individual.valid:
+    o_coefficients = list()
+    for objective in state.problem.objectives:
+        if objective.sense == MAXIMIZE:
+            o_coefficients.append(-1)
+        else:
+            o_coefficients.append(1)
+    c_coefficients = list()
+    for constraint in state.problem.constraints:
+        if constraint.sense == MAXIMIZE:
+            c_coefficients.append(-1)
+        else:
+            c_coefficients.append(1)
+    for a_individual in state.archive[rank_number].individuals:
+        if a_individual.valid:
             sample = state.grid.Sample(
-                *(a[i] for a, i in zip(axes, archive_individual.grid_point)))
+                *(a[i] for a, i in zip(axes, a_individual.grid_point)))
+            objectives = [y * c for y, c
+                          in zip(a_individual.objectives, o_coefficients)]
+            constraints = [y * c for y, c
+                          in zip(a_individual.constraints, c_coefficients)]
             individual = Individual(
                 sample,
-                archive_individual.objectives,
-                archive_individual.constraints,
-                archive_individual.tagalongs)
+                objectives,
+                constraints,
+                a_individual.tagalongs)
             yield individual
 
 def _dummy_grid_sample(grid):

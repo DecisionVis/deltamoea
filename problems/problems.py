@@ -125,3 +125,15 @@ def dtlz2_rotated(ndv, nobj):
                 rotated[ii] = 1.0
         return straight_dtlz2(rotated)
     return evaluate
+
+def dtlz2_max(ndv, nobj):
+    """
+    maximization version of dtlz2_rotated
+    """
+    rot_dtlz2 = dtlz2_rotated(ndv, nobj)
+    def evaluate(xx):
+        minobj = rot_dtlz2(xx)
+        return [-y for y in minobj]
+    return evaluate
+
+

@@ -19,17 +19,18 @@ from udmoea import get_iterator
 
 from problems.problems import dtlz2
 from problems.problems import dtlz2_rotated
+from problems.problems import dtlz2_max
 
-# Top-down view of optimizing a 3,2 DTLZ2 with the new algorithm
-evaluate = dtlz2_rotated(4, 2)
+# Top-down view of optimizing a 4,2 DTLZ2 with the new algorithm
+evaluate = dtlz2_max(4, 2)
 decision1 = Decision("decision1", 0.0, 1.0, 1.0) # 0 or 1
 decision2 = Decision("decision2", 0.0, 1.0, 0.3)
-decision3 = Decision("decision3", 0.0, 1.0, 0.01)
-decision4 = Decision("decision4", 0.0, 1.0, 0.03)
+decision3 = Decision("decision3", 0.0, 1.0, 0.1)
+decision4 = Decision("decision4", 0.0, 1.0, 0.07)
 decisions = (decision1, decision2, decision3, decision4)
 
-objective1 = Objective("objective1", MINIMIZE)
-objective2 = Objective("objective2", MINIMIZE)
+objective1 = Objective("objective1", MAXIMIZE)
+objective2 = Objective("objective2", MAXIMIZE)
 objectives = (objective1, objective2)
 
 constraints = tuple()
@@ -62,6 +63,8 @@ for nfe in range(10000):
     individual = Individual(dvs, objs, tuple(), tuple())
     state = return_evaluated_individual(state, individual)
 
+# Print ranks to stdout
+rank_sizes = dict((ii, 0) for ii in range(len(state.archive)))
 print("rank,{},{}".format(
     ",".join(d.name for d in problem.decisions),
     ",".join(o.name for o in problem.objectives)))
@@ -74,6 +77,11 @@ for ii in range(len(state.archive)):
             ",".join("{:.2f}".format(d) for d in individual.decisions),
             ",".join("{:.2f}".format(o) for o in individual.objectives)
         ))
+        rank_sizes[ii] += 1
+
+# Print rank sizes to stderr
+for ii in range(len(state.archive)):
+    sys.stderr.write("{}\t{}\n".format(ii, rank_sizes[ii]))
 """
 teardown(problem)
 """
