@@ -44,17 +44,23 @@ def sort_into_archive(state, archive_individual):
                 # adjust rank occupancy
                 if dominance == LEFT_DOMINATES:
                     rank_B.individuals[rank_B.occupancy] = i_ind
-                    rank_B._replace(occupancy=rank_B.occupancy + 1)
+                    rank_B = rank_B._replace(occupancy=rank_B.occupancy + 1)
                     into.individuals[ii] = i_ind._replace(valid=False)
-                    into._replace(occupancy=into.occupancy - 1)
+                    into = into._replace(occupancy=into.occupancy - 1)
                 elif dominance == RIGHT_DOMINATES:
                     rank_B.individuals[rank_B.occupancy] = a_ind
-                    rank_B._replace(occupancy=rank_B.occupancy + 1)
+                    rank_B = rank_B._replace(occupancy=rank_B.occupancy + 1)
                     rank_A.individuals[ai] = a_ind._replace(valid=False)
-                    rank_A._replace(occupancy=rank_A.occupancy - 1)
+                    rank_A = rank_A._replace(occupancy=rank_A.occupancy - 1)
                     # break if rank A individual was dominated and go
                     # to next rank A individual
                     break
+        print("after comparisons: rank {}".format(rank_into))
+        _print_rank(into)
+        print("after comparisons: rank_A")
+        _print_rank(rank_A)
+        print("after comparisons: rank_B")
+        _print_rank(rank_B)
         # insert valid individuals from rank A in "into"
         into, rank_A = fill_rank_from_rank(into, rank_A)
 
@@ -122,9 +128,9 @@ def fill_rank_from_rank(destination, source):
                 di += 1
             else:
                 destination.individuals[di] = s_ind
-                destination._replace(occupancy=destination.occupancy + 1)
+                destination = destination._replace(occupancy=destination.occupancy + 1)
                 source.individuals[si] = s_ind._replace(valid=False)
-                source._replace(occupancy=source.occupancy - 1)
+                source = source._replace(occupancy=source.occupancy - 1)
         if di >= len(destination.individuals):
             break
     return destination, source
