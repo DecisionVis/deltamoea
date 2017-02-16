@@ -44,7 +44,7 @@ def sort_into_archive(state, archive_individual):
                 if not i_ind.valid:
                     continue
                 i_remaining -= 1
-                dominance = _compare(state.problem, a_ind, i_ind)
+                dominance = _compare(a_ind, i_ind)
                 # invalidate the dominated individual 
                 # insert it into rank_B
                 # adjust rank occupancy
@@ -164,7 +164,7 @@ def move_individual(destination_rank, destination_index, source_rank, source_ind
         occupancy=source_rank.occupancy - 1)
     return destination_rank, source_rank
 
-def _compare(problem, left, right):
+def _compare(left, right):
     """
     problem (Problem): used for determining which comparisons to use
     left (Individual)
@@ -207,5 +207,11 @@ def _compare(problem, left, right):
     elif dright and not dleft:
         return RIGHT_DOMINATES
     else:
-        return NEITHER_DOMINATES
+        # if we've oversampled and the individuals are
+        # nondominated, arbitrarily say that the
+        # "left" individual dominates
+        if left.grid_point == right.grid_point:
+            return LEFT_DOMINATES
+        else:
+            return NEITHER_DOMINATES
 

@@ -186,3 +186,12 @@ example, have their attributies specified to within a
 given tolerance.  Adjusting the values specifying such a
 component by less than the tolerance does not produce
 a practical difference in the design.
+
+# Weak Justification for SBX
+
+So in a 1999 tech report, Deb says that SBX makes two
+offspring to avoid bias toward either parent.  That's
+weak, considering that which parent is which is determined
+at random.  I still don't understand the coinflip in SBX
+at all.  I would love to see that addressed in the
+literature.

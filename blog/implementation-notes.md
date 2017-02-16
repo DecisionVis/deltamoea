@@ -267,3 +267,135 @@ and retain only grid points.
 We should also allocate a list of issued samples for which
 we do not yet have an evaluated individual.  It should probably
 have ranksize members or so.
+
+# Preemption
+
+2017-02-16 12:19
+
+It would be really easy to add multiple levels of preemption to 
+my sorting procedure.  All you would have to do would be to
+take the current sorting procedure and put an extra for loop
+around the constraints.
+
+Presenting this to the user is the hardest part.
+One approach would be for constraints to be defined in parallel with
+levels of preemption.  We could call the levels of preemption
+"goals" or perhaps "goal levels".  The way things would work in
+this account is that the constraints are really the zeroth
+level of preemption.  And then the "goals" are the first through
+nth levels of preemption.  Finally the objectives are what they've
+always been, with no saturation.
+
+# Selection and Variation
+
+2017-02-16 12:34
+
+I'm going to present a more detailed account of selection
+and variation operators now, since the time has come to
+implement them.
+
+## What Do We Want To Produce?
+
+Selection and variation have a different role in UDMOEA
+than in MOEAs in general.  MOEAs in general want to
+find a well-spaced Pareto front in objective space,
+and they're willing to make a trifling nudge in decision
+space to do so.  UDMOEA on the other hand wants to find
+a well-spaced Pareto front in decision space.  That means
+we must make a minimum of a one-delta step.
+
+Given a set of nondomination ranks and a list of issued
+samples, we want to produce a sample at a grid point that
+is not in any of those.  Furthermore, we would like that
+grid point to have a good chance of advancing the search.
+If it weren't for the second requirement, we could just
+have a policy of always selecting points adjacent to the
+archive.  But this is what variation operators buy us.
+In particular, SBX does this for us, because it chooses
+a step size based on two "good" individuals.
+
+## Why Do We Usually Combine SBX with PM?
+
+The advantage of PM over SBX is that it makes steps scaled
+to the decision space rather than to the parents.  This
+helps introduce genotypic variation when your population
+has started to converge towards a point.  Needless to
+say, that's not as much of an advantage here.  I'm leaning
+strongly towards excluding PM from the algorithm.
+
+## In What Direction Should We Step?
+
+Conventional MOEAs step in more than one direction at a
+time.  Every SBX implementation I've seen (Borg, Platypus,
+JMetal, NSGAII classic, Shark) applies SBX to every
+variable (with a probability of 50%).  This is a hidden
+parameter that goes without question.  I haven't seen
+any justification in the literature for this, and it seems
+dramatically at odds with common sense.  (And this is not
+to mention the odd feature that SBX always gives birth to
+twins.)  The common sense I refer to is the "sparsity of
+effects principle," known to statisticians as a rule of
+thumb.  It's not an iron law, but in general it states
+that interactions in physical systems are weaker than
+first-order effects, and that the higher the order of the
+interactions, the weaker they are.
+
+Therefore, instead of the 50% rule, which makes, to coin
+a phrase, a "density of effects" assumption, let's do
+a 90-10 rule: 90% of the time, we do SBX on a single variable.
+10% of the time we choose 2 variables.
+
+Furthermore, we will treat the parents asymmetrically.
+The offspring will be based on the left parent, but SBX
+will produce a distribution around the right parent's
+grid point for the chosen variables.
+
+## Which Brings Us Back To Selection
+
+So where are the parents from?  Yesterday I was saying
+they should be selected propotionally from the archive
+ranks without regard to the occupancy of those ranks.
+But then I started worrying about pathological cases,
+where the ranks are really small.  This leads me to a
+suggestion that actually brings us almost all the way back
+to classic proportional selection: weight the probability
+of choosing each rank by its occupancy.  Don't let the
+last rank participate because it's a dumping ground for
+dominated individuals.
+
+Actually, we need different probabilities for the two
+parents.  The first parent should be chosen from rank 0
+with probability 1.  (Remember that we get our diversity
+guarantee from the decision grid.)  Then the second parent
+gets chosen with some probability that's possibly modulated
+by occupancy.
+
+Brainstorming a procedure:
+
+1. Start by assigning an un-normalized probability to each
+   rank, equal to the occupancy of that rank.  Exclude the
+   last rank.
+2. Divide each rank's probability by (1+rank number).  Or
+   multiply by 2 ** (-rank number).  Or some other function
+   that makes probability decline.
+3. Normalize the probabilities.
+
+The problem with this is that it seems very sensitive
+to parameterization.
+
+What I actually want is for the second parent to have a
+high probability of coming from rank 0 if rank 0 is big,
+with that probability declining as rank 0 gets smaller.
+The problem is defining what "big" means.  One way of
+looking at this is by defining thresholds.
+
+Maybe we just want one parameter.  A population size
+perhaps?  (Trolling myself a little here.)  This parameter
+is how many individuals get to participate in selection.
+
+Suppose we just always selected the second parent from
+Rank0.  How does this get us in trouble?  If Rank0
+is small, it inhbits diversity.  The point is that
+slightly-dominated individuals may still be quite good.
+Take the worst-case scenario, where we have a single
+objective and ranks of a single individual.

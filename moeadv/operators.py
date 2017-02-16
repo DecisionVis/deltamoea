@@ -106,9 +106,9 @@ def sbx_inner(x_lower, x_upper, di):
             beta_q = (1.0 / (2.0 - uniform_1 * alpha)) ** kappa
             # This assertion is not true! assert(beta_q <= 1.0)
         if swapped:
-            sign = 1.0
-        else:
             sign = -1.0
+        else:
+            sign = 1.0
         y_child = 0.5 * ((y_1 + y_2) + sign * beta_q * delta)
         x_child = x_lower + x_range * y_child
         return x_child
