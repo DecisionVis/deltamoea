@@ -2,11 +2,13 @@
 MAXIMIZE = "maximize"
 MINIMIZE = "minimize"
 
-# DOE state and termination conditions
+# DOE state, termination conditions, and errors
 CENTERPOINT = "centerpoint"
 OFAT = "OFAT"
 CORNERS = "corners"
 RANDOM = "random"
+EXHAUSTIVE = "exhaustive"   # fell back on grid sweep
+EXHAUSTED = "exhausted"     # totally exhausted
 COUNT = "count"
 
 # Decision value retention policy

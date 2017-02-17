@@ -24,9 +24,13 @@ from .Structures import DOEState
 from .Structures import Axis
 from .Structures import Grid
 from .Structures import GridPoint
+from .Structures import Issued
 from .Structures import MOEAState
 
 from .Sorting import sort_into_archive
+
+from .Sampling import doe_next
+from .Sampling import evolve
 
 def create_moea_state(problem, **kwargs):
     """
@@ -93,9 +97,10 @@ def create_moea_state(problem, **kwargs):
                for _ in range(ranks)]
     rank_A = _empty_rank(problem, float_values, ranksize)
     rank_B = _empty_rank(problem, float_values, ranksize)
-    issued = tuple(
-        (tuple((-1 for _ in problem.decisions))
-        for _ in range(ranksize)))
+    issued = Issued(
+        [grid.GridPoint(*(-1 for _ in problem.decisions))
+         for _ in range(ranksize)],
+        0)
     # initial DOE state is: do an OFAT DOE
     doestate = DOEState(CENTERPOINT, OFAT, 0, 0)
 
@@ -119,9 +124,7 @@ def doe(state, **kwargs):
     samples will begin to fill out a design of experiments
     on the decision space, rather than doing evolution
     on the archived individuals.  If this function is not
-    called and initial evaluated samples are not provided,
-    some DOE samples will still be generated until there
-    is material for evolution.
+    called, we will do OFAT.
 
     The DOE proceeds as:
         center point    (1 sample)
@@ -261,46 +264,77 @@ def get_iterator(state, rank_number):
                 a_individual.tagalongs)
             yield individual
 
-def _dummy_grid_sample(grid):
-    """ generator function, placeholder for selection and
-    variation operators, and DOE, just returns all grid
-    points in no particularly good order. """
-    index = grid.GridPoint(*(0 for _ in grid.axes))
-    while True:
-        yield index
-        new_index = list()
-        overflow = True
-        # treat first index as least significant because
-        # it's easiest that way
-        for ii, axis in zip(index, grid.axes):
-            if overflow:
-                if ii+1 < len(axis):
-                    new_index.append(ii+1)
-                    overflow = False
-                else:
-                    new_index.append(0)
-                    overflow = True
-            else:
-                new_index.append(ii)
-        if overflow:
-            raise StopIteration()
-        index = grid.GridPoint(*new_index)
-
-dgs = None
 def get_sample(state):
     """
     state (MOEAState): current algorithm state
 
     Returns a new MOEAState and a sample in decision space.
     """
-    # bootstrapping the algorithm: for now use grid sampling as
-    # a placeholder
-    global dgs
-    if dgs is None:
-        dgs = _dummy_grid_sample(state.grid)
-    grid_point = next(dgs)
-    sample = state.grid.Sample(*(a[i] for a, i in zip(state.grid.axes, grid_point)))
+    # Should we do a DOE sample?
+    if _should_do_doe(state):
+        state, grid_point = doe_next(state)
+        # Only DOE samples performed here count against the
+        # COUNT termination condition.
+        if state.doestate.terminate == COUNT and state.doestate.remaining > 0:
+            state = state._replace(doestate=state.doestate._replace(
+                    remaining=state.doestate.remaining - 1))
+    else:
+        state, grid_point = evolve(state)
+
+    # Add grid_point to issued list
+    grid_points = state.issued.grid_points
+    index = state.issued.index
+    grid_points[index] = grid_point
+    state = state._replace(
+        issued=state.issued._replace(
+            grid_points=grid_points,
+            index=(index + 1) % len(grid_points)
+    ))
+
+    grid = state.grid
+    sample = grid.Sample(*(a[i] for a, i in zip(grid.axes, grid_point)))
+    # Return sample
     return state, sample
+
+def _should_do_doe(state):
+    """
+    state (MOEAState)
+    Returns True if we should do a DOE sample.
+
+    The termination condition is terminate-after-stage,
+    so if you specify CENTERPOINT as your termination
+    condition, you get one DOE sample.  The way to get
+    zero DOE samples is to set the termination condition
+    to COUNT and the count to 0.  If the archive is
+    completely empty, we're going to issue DOE samples
+    anyway, so the user shouldn't be asking for samples
+    in that situation if DOE samples are not desired.
+    """
+    if state.archive[0].occupancy == 0:
+        # The archive is empty, we have nothing else to go
+        # on.
+        return True
+    stage = state.doestate.stage
+    terminate = state.doestate.terminate
+    if terminate == COUNT:
+        return state.doestate.remaining > 0
+    elif stage == CENTERPOINT:
+        return True
+    elif stage == OFAT:
+        return terminate in (OFAT, CORNERS)
+    elif stage == CORNERS:
+        return terminate == CORNERS
+    elif stage == RANDOM:
+        # You're only going to get random points if you're
+        # using COUNT for your termination condition.  Or
+        # if we've issued a ton of points and gotten none
+        # back.
+        return False
+    # True is safer than False as a fallback, because you
+    # can always do DOE but you can't always do selection
+    # and variation.  Nevertheless, this return statement
+    # should be unreachable.
+    return True
 
 def _create_grid(decisions):
     """

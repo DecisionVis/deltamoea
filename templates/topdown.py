@@ -3,6 +3,7 @@ import sys
 from udmoea import MINIMIZE
 from udmoea import MAXIMIZE
 from udmoea import CORNERS
+from udmoea import COUNT
 from udmoea import RETAIN
 from udmoea import DISCARD
 
@@ -48,9 +49,9 @@ for individual in already_evaluated_individuals:
     state = return_evaluated_individual(state, individual)
 
 # Optionally, specify alternative DOE terminating conditions.
-# For the 3,2 DTLZ2 in this example, it does make sense
+# For the 4,2 DTLZ2 in this example, it does make sense
 # because there are so few decision variables.
-state = doe(state, terminate=CORNERS)
+state = doe(state, terminate=COUNT, count=1000)
 
 for nfe in range(10000):
     try:

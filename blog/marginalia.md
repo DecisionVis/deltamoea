@@ -195,3 +195,36 @@ weak, considering that which parent is which is determined
 at random.  I still don't understand the coinflip in SBX
 at all.  I would love to see that addressed in the
 literature.
+
+My suspicion is that when GAs were still binary coded
+and being used on combinatorial problems, this was the
+behavior of multipoint crossover, and Deb carried it
+over when he first developed SBX.  But combinatorial
+problems and problems with continuous variables are just
+different.  Combinatorial problems like TSP or KP have
+huge dependencies between variables.  Problems on a
+continuous space tend to exhibit a sparsity of effects.
+I would argue that this will prove to be true even for
+a ridiculous rotated hundred variable dtlz2.  When you
+consider the rotation, for any pair of variables at any
+point in space, for any objective, how likely is it that
+both variables have effects of the same magnitude, let
+alone have a strong off-axis curvature?  It helps to
+visualize this on a grid to see how unlikely this is.
+Sure, there will be a few grid boxes with strong curvature,
+but most of the space is not going to be like that, and
+furthermore it's not clear to me how doing "multipoint"
+crossover would help in this situation.  If anything, it
+makes your problem worse because your chances of stepping
+in the right direction still go down.
+
+Incidentally, this is why GAs never caught on for
+single-objective combinatorial problems.  They are
+incapable of choosing the right genetic material to move
+together, and as a result are very likely to produce
+offspring that's a complete flop.  They're a much better
+fit for multi-objective combinatorial problems because
+they maintain a search population that's capable of
+representing a multi-objective tradeoff.  This is also why
+genetics works in real life -- there are many different
+ways to survive until you can reproduce.

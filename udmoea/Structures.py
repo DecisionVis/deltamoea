@@ -58,7 +58,7 @@ Rank = namedtuple("Rank", (
 
 # DOE state: state of the ongoing DOE
 DOEState = namedtuple("DOEState", (
-    "stage",        # CENTERPOINT, OFAT, CORNERS, RANDOM
+    "stage",        # CENTERPOINT, OFAT, CORNERS, RANDOM, EXHAUSTIVE, EXHAUSTED
     "terminate",    # CENTERPOINT, OFAT, CORNERS, COUNT
     "counter",      # int to keep track of where you are in the stage
     "remaining",    # int to keep track of the remaining COUNT
@@ -77,6 +77,12 @@ Grid = namedtuple("Grid", (
     "Sample",       # a namedtuple type to use for samples in decision space
 ))
 
+# Issued: rolling record of issued samples
+Issued = namedtuple("Issued", (
+    "grid_points",  # a list of GridPoints
+    "index",        # where we should write the next sample
+))
+
 # Algorithm state at some point in time.
 MOEAState = namedtuple("MOEAState", (
     "problem",             # a Problem
@@ -85,7 +91,7 @@ MOEAState = namedtuple("MOEAState", (
     "archive",             # a list of Ranks
     "rank_A",              # an extra Rank, needed for sorting
     "rank_B",              # an extra Rank, needed for sorting
-    "issued",              # a list of samples in index space
+    "issued",              # an Issued structure
     "random",              # real-valued [0,1) RNG
     "randint",             # integer-valued [a, b] RNG
     "doestate",            # a DOEState

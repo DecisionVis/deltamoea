@@ -521,4 +521,17 @@ And here's how DOE will do it.
 2. Check the new sample against the issued list and the
    archive.
 3. If the grid point has already been sampled.
-   a. If this is the Nth failure, emit an error.  It's p
+   a. If this is the Nth failure, emit an error.  It's up
+   to the user at this point to catch the error.  If the
+   user ignores the error, fall back on exhaustive sweep.
+   If even exhaustive sweep fails, emit another error and
+   fall back on random sampling.  At this point we've done
+   our best not to resample, further sampling is pointless,
+   but we're doing it anyway because the user insisted.
+   b. Otherwise goto 1.
+   
+All of this "emit an error" business implies that we should
+also be logging errors somewhere.  If the user doesn't want
+a log, we can provide an option to direct logging to
+/dev/null, but like ignoring errors in the C version, this
+has to be a deliberate choice.
