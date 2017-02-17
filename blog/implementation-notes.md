@@ -476,5 +476,49 @@ So there's my selection-and-variation procedure:
 3. Decide how many variables to do.
 4. Choose variables
 5. Do SBX on those variables, with the unmodified variables
-   taking their values from parent A and the modified variables
-   ending up close to parent B.
+   taking their values from parent A and the modified
+   variables ending up close to parent B.
+
+Further, let's put selection-and-variation in the context
+of the procedure for producing an sample.
+
+1. Decide whether to do a DOE sample.
+    a. Yes, get next sample from DOE
+    b. No, do selection-and-variation
+2. Add sample to issued list
+3. Return sample
+
+I was going to put the check against the issued list
+and the archive in there, but I realized that there are
+different consequences depending on whether you're doing
+DOE or selection-and-variation.
+
+So selection-and-variation, copypasted from above, with
+the addition of the resampling check:
+
+1. Select parent A from rank 0, always.
+2. Select parent B as above, from the equi-feasible ranks,
+   with a linear probability ramp.
+3. Decide how many variables to do.
+4. Choose variables
+5. Do SBX on those variables, with the unmodified variables
+   taking their values from parent A and the modified
+   variables ending up close to parent B.
+6. Check the new sample against the issued list and the
+   archive.
+   a. If the grid point has already been sampled,
+   do a line search along the parent A -> offspring vector
+   until an unoccupied grid point is found.
+   b. If line search fails goto 4 and try again with
+   different variables.  Possibly adjust the probability
+   ramp to get more diversity.
+   c. If that fails too many times, emit a warning and
+   fall back on DOE.
+
+And here's how DOE will do it.
+
+1. Generate next DOE sample.
+2. Check the new sample against the issued list and the
+   archive.
+3. If the grid point has already been sampled.
+   a. If this is the Nth failure, emit an error.  It's p
