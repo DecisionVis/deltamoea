@@ -100,9 +100,9 @@ The pseudocode above includes a component upon which we
 have not yet remarked: tagalongs.  Tagalongs are data
 resulting from an evaluation, but unlike objectives and
 constraints they have no role to play in optimization.
-In general their role for the user is to preserve enough
+In general their role for the user is to **preserve enough
 information about a model evaluation to make repeating
-that evaluation unnecessary in the future.  While the user
+that evaluation unnecessary in the future.**  While the user
 could store tagalongs offline instead (and should do so
 for large or complicated cases), allowing UDMOEA to handle
 a reasonable amount of tagalong data in its Archive is a

@@ -16,7 +16,7 @@ assumption held over from that time is that it is
 necessary to discard the results of old evaluations
 to make room for new.  This assumption no longer holds.
 
-# Archive Structure
+## Archive Structure
 
 The Archive is a large array of individuals, subdivided
 into ranks.  Each rank corresponds to a Pareto rank.
@@ -25,7 +25,7 @@ By default, UDMOEA uses a large number of large ranks:
 is represented as a grid point, a set of objective values,
 a set of constraint values, and a set of tagalong values.
 
-## Archive Size
+### Archive Size
 
 Here is a back-of-the-envelope calculation of Archive
 size:
@@ -48,7 +48,7 @@ problem, as well.  Problems with fewer objectives will
 likely not require such large ranks, and problems with
 more objectives will likely not require so many ranks.
 
-# Scanning
+## Scanning
 
 So that UDMOEA will not issue the same sample a second time,
 it must scan its Archive.  Since most of UDMOEA's
@@ -64,7 +64,7 @@ user tolerance for duplicate model evaluations.  Opting to
 retain fewer Pareto ranks will lower the cost of scanning
 the Archive.
 
-# Insertion
+## Insertion
 
 Since the Archive is structured around Pareto ranks, it
 will always be Pareto sorted.  Maintaining that structure
@@ -82,7 +82,7 @@ Archive, forcing the entire Archive to be re-sorted.  As
 the number of evaluations increases, however, these events
 will become vanishingly unlikely.
 
-# Rank Overflow
+## Rank Overflow
 
 The default rank size of 10,000 is chosen such that
 most problems will never fill a rank with nondominated
@@ -95,7 +95,7 @@ preference for superior Pareto ranks will disfavor the
 part of decision space represented by the individuals that
 were forced into an inferior Pareto rank.
 
-# Archive Overflow
+## Archive Overflow
 
 If the problem structure results in a large number
 of Pareto ranks, UDMOEA will collect the most inferior
@@ -117,7 +117,7 @@ size larger than one.  Adjusting the `ranks` and `ranksize`
 parameters will be necessary for single-objective
 optimization problems.
 
-# Off-Grid Samples
+## Off-Grid Samples
 
 Another challenge to comprehensive archiving is the
 question of what to do with individuals that were not
