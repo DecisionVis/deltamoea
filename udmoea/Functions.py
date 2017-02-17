@@ -31,6 +31,8 @@ from .Sorting import sort_into_archive
 
 from .Sampling import doe_next
 from .Sampling import evolve
+from .Sampling import NearExhaustionWarning
+from .Sampling import TotalExhaustionError
 
 def create_moea_state(problem, **kwargs):
     """

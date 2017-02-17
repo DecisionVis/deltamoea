@@ -18,6 +18,9 @@ from udmoea import get_sample
 from udmoea import return_evaluated_individual
 from udmoea import get_iterator
 
+from udmoea import NearExhaustionWarning
+from udmoea import TotalExhaustionError
+
 from problems.problems import dtlz2
 from problems.problems import dtlz2_rotated
 from problems.problems import dtlz2_max
@@ -51,15 +54,25 @@ for individual in already_evaluated_individuals:
 # Optionally, specify alternative DOE terminating conditions.
 # For the 4,2 DTLZ2 in this example, it does make sense
 # because there are so few decision variables.
-state = doe(state, terminate=COUNT, count=1000)
+state = doe(state, terminate=COUNT, count=10000)
 
-for nfe in range(10000):
+for nfe in range(1, 10001):
     try:
         state, dvs = get_sample(state)
+    except NearExhaustionWarning as ew:
+        print("Nearly Exhausted!  Switch to exhaustive search!")
+        state = ew.state
+    except TotalExhaustionError as te:
+        print("Totally Exhausted!  Waste electricity doing random resamples!")
+        state = te.state
     except StopIteration:
         break
     if nfe % 500 == 0:
         sys.stderr.write('.')
+        if nfe % 10000 == 0:
+            sys.stderr.write('\n')
+        elif nfe % 2500 == 0:
+            sys.stderr.write(' ')
     objs = evaluate(dvs)
     individual = Individual(dvs, objs, tuple(), tuple())
     state = return_evaluated_individual(state, individual)
