@@ -136,3 +136,4 @@ the other.  In the unlikely circumstance that both
 individuals are equidistant from the grid point as well
 as being nondominated, one will be demoted to the next
 Pareto rank arbitrarily.
+
