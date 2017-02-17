@@ -8,8 +8,8 @@ SRC_FILES = \
     diversity_maintenance.md \
     archive.md \
     selection.md \
-    parallelism.md \
-    api_summary.md
+    parallelism.md #\
+    #api_summary.md
 
 all:
 	cat $(SRC_FILES) > report.md
