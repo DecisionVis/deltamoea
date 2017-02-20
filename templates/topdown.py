@@ -56,15 +56,17 @@ for individual in already_evaluated_individuals:
 # because there are so few decision variables.
 state = doe(state, terminate=COUNT, count=10000)
 
-for nfe in range(1, 10001):
+for nfe in range(1, 3001):
     try:
         state, dvs = get_sample(state)
     except NearExhaustionWarning as ew:
         print("Nearly Exhausted!  Switch to exhaustive search!")
         state = ew.state
+        continue
     except TotalExhaustionError as te:
         print("Totally Exhausted!  Waste electricity doing random resamples!")
         state = te.state
+        continue
     except StopIteration:
         break
     if nfe % 500 == 0:
