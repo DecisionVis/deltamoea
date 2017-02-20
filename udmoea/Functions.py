@@ -276,7 +276,9 @@ def get_sample(state):
     if _should_do_doe(state):
         state, grid_point = doe_next(state)
         # Only DOE samples performed here count against the
-        # COUNT termination condition.
+        # COUNT termination condition.  (It's perfectly legit
+        # for a user to call doe_next to get DOE samples in
+        # other circumstances.)
         if state.doestate.terminate == COUNT and state.doestate.remaining > 0:
             state = state._replace(doestate=state.doestate._replace(
                     remaining=state.doestate.remaining - 1))
