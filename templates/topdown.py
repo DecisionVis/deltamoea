@@ -57,7 +57,7 @@ for individual in already_evaluated_individuals:
 # because there are so few decision variables.
 state = doe(state, terminate=OFAT)
 
-for nfe in range(1, 301):
+for nfe in range(1, 1001):
     try:
         state, dvs = get_sample(state)
     except NearExhaustionWarning as ew:
