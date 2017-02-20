@@ -139,6 +139,11 @@ def doe_next(state):
                 raise TotalExhaustionError(state)
             else:
                 doestate = doestate._replace(counter=advanced_counter)
+        if stage == EXHAUSTED:
+            # No point in wasting time on a duplicate check, and
+            # if we're exhausted the loop condition will remain true
+            # forever.
+            break
         duplicated = is_duplicate(state, grid_point)
         if duplicated and stage == RANDOM:
             duplicates_generated += 1
