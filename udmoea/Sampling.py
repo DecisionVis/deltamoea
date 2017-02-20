@@ -328,16 +328,12 @@ def _line_search(state, parent, offspring):
                 counters[ii] = counters[ii] % threshold
                 location[ii] = location[ii] + signstep[ii]
                 if location[ii] < 0:
-                    print("tried to go below 0 for {}".format(offspring._fields[ii]))
                     failed = True
                 elif location[ii] >= len(state.grid.axes[ii]):
-                    print("tried to go above {} for {}".format(len(state.grid.axes[ii]) - 1, offspring._fields[ii]))
                     failed = True
         search_result = state.grid.GridPoint(*location)
         duplicated = is_duplicate(state, search_result)
-        number_of_steps += 1
     if duplicated or failed:
-        print("reversing direction after {} attempts!".format(number_of_steps))
         # Search toward parent from offspring
         location = [o for o in offspring]
         counters = [0 for _ in abstep]
@@ -352,16 +348,12 @@ def _line_search(state, parent, offspring):
                     counters[ii] = counters[ii] % threshold
                     location[ii] = location[ii] - signstep[ii]
                     if location[ii] < 0:
-                        print("tried to go below 0 for {}".format(offspring._fields[ii]))
                         failed = True
                     elif location[ii] >= len(state.grid.axes[ii]):
-                        print("tried to go above {} for {}".format(len(state.grid.axes[ii]) - 1, offspring._fields[ii]))
                         failed = True
             search_result = state.grid.GridPoint(*location)
             duplicated = is_duplicate(state, search_result)
-            number_of_steps += 1
 
-    print("number of steps in line search: {}, succeeded: {}, duplicated {}".format(number_of_steps, not failed, duplicated))
     if failed or duplicated:
         return offspring, True
     else:
