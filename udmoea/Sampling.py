@@ -13,7 +13,7 @@ class NearExhaustionWarning(Exception):
 
 class TotalExhaustionError(Exception):
     def __init__(self, state, *args, **kwargs):
-        super(NearExhaustionWarning, self).__init__(*args, **kwargs)
+        super(TotalExhaustionError, self).__init__(*args, **kwargs)
         self.state = state
 
 def _dummy_grid_index(grid):
@@ -152,6 +152,7 @@ def doe_next(state):
             # to exhaustive search.
             if duplicates_generated > 1000:
                 doestate = doestate._replace(stage=EXHAUSTIVE)
+                state = state._replace(doestate=doestate)
                 raise NearExhaustionWarning(state)
     state = state._replace(doestate=doestate)
     #state, sample = _sample_dummy_grid(state)
