@@ -226,7 +226,6 @@ def evolve(state):
     # If everything failed, return a doe point
     if duplicated:
         return doe_next(state)
-
     return state, offspring
 
 def sbx_index(aa, bb, allowed, random):
@@ -329,7 +328,7 @@ def _line_search(state, parent, offspring):
                 elif location[ii] >= len(state.grid.axes[ii]):
                     return (offspring, True) # line search failed!!!
         offspring = state.grid.GridPoint(*location)
-        duplicated = is_duplicate(offspring)
+        duplicated = is_duplicate(state, offspring)
     return offspring, duplicated
 
 def _select_rank(state, ramp):
@@ -348,13 +347,12 @@ def _select_rank(state, ramp):
         if rank.occupancy == 0:
             break
         occupied_ranks += 1
-    limit = occupied_ranks * occupied_ranks
-    limit = limit + sum(ramp * r for r in range(occupied_ranks))
+    # see elsewhere discussion about stack allocation
+    breaks = [occupied_ranks + ramp * ii for ii in range(occupied_ranks)]
+    limit = breaks[-1]
     selection = state.randint(0, limit-1)
     rank_number = 0
-    accumulator = 0
-    while accumulator < selection:
-        accumulator = accumulator + occupied_ranks + ramp * rank_number
+    while breaks[rank_number] < selection:
         rank_number += 1
     if rank_number > occupied_ranks:
         # should never happen!
@@ -372,7 +370,7 @@ def _select(state, rank_number):
     """
     rank = state.archive[rank_number]
     if rank.occupancy == 0:
-        raise Exception("Can't select from an empty rank.")
+        raise Exception("Can't select from an empty rank ({}).".format(rank_number))
     randint = state.randint
     target = randint(0, rank.occupancy - 1)
     counter = -1

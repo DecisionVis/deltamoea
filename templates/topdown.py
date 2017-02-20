@@ -2,6 +2,7 @@ import sys
 
 from udmoea import MINIMIZE
 from udmoea import MAXIMIZE
+from udmoea import OFAT
 from udmoea import CORNERS
 from udmoea import COUNT
 from udmoea import RETAIN
@@ -54,9 +55,9 @@ for individual in already_evaluated_individuals:
 # Optionally, specify alternative DOE terminating conditions.
 # For the 4,2 DTLZ2 in this example, it does make sense
 # because there are so few decision variables.
-state = doe(state, terminate=COUNT, count=10000)
+state = doe(state, terminate=OFAT)
 
-for nfe in range(1, 3001):
+for nfe in range(1, 301):
     try:
         state, dvs = get_sample(state)
     except NearExhaustionWarning as ew:

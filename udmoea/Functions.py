@@ -314,10 +314,6 @@ def _should_do_doe(state):
     anyway, so the user shouldn't be asking for samples
     in that situation if DOE samples are not desired.
     """
-    if state.archive[0].occupancy == 0:
-        # The archive is empty, we have nothing else to go
-        # on.
-        return True
     stage = state.doestate.stage
     terminate = state.doestate.terminate
     if terminate == COUNT:
