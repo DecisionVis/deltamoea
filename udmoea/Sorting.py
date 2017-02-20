@@ -4,6 +4,8 @@ from .Constants import LEFT_DOMINATES
 from .Constants import RIGHT_DOMINATES
 from .Constants import NEITHER_DOMINATES
 
+from math import isnan
+
 def sort_into_archive(state, archive_individual):
     archive = state.archive
 
@@ -178,6 +180,10 @@ def _compare(left, right):
             # For constraints, we are indifferent to values
             # less than zero.
             continue
+        if isnan(zl):
+            dleft = False
+        if isnan(zr):
+            dright = False
         if dleft and zl > zr:
             dleft = False
         elif dright and zr > zl:
@@ -194,6 +200,10 @@ def _compare(left, right):
 
     # Both individuals are feasible, so compare objectives.
     for yl, yr in zip(left.objectives, right.objectives):
+        if isnan(yl):
+            dleft = False
+        if isnan(yr):
+            dright = False
         # minimize everything
         if yl > yr:
             dleft = False
