@@ -6,6 +6,9 @@ from .Constants import RANDOM
 from .Constants import EXHAUSTIVE
 from .Constants import EXHAUSTED
 
+from math import floor
+from math import ceil
+
 class NearExhaustionWarning(Exception):
     def __init__(self, state, *args, **kwargs):
         super(NearExhaustionWarning, self).__init__(*args, **kwargs)
@@ -16,44 +19,13 @@ class TotalExhaustionError(Exception):
         super(TotalExhaustionError, self).__init__(*args, **kwargs)
         self.state = state
 
-def _dummy_grid_index(grid):
-    """ generator function, placeholder for selection and
-    variation operators, and DOE, just returns all grid
-    points in no particularly good order. """
-    index = grid.GridPoint(*(0 for _ in grid.axes))
-    while True:
-        yield index
-        new_index = list()
-        overflow = True
-        # treat first index as least significant because
-        # it's easiest that way
-        for ii, axis in zip(index, grid.axes):
-            if overflow:
-                if ii+1 < len(axis):
-                    new_index.append(ii+1)
-                    overflow = False
-                else:
-                    new_index.append(0)
-                    overflow = True
-            else:
-                new_index.append(ii)
-        if overflow:
-            raise StopIteration()
-        index = grid.GridPoint(*new_index)
-
-dgs = None
-def _sample_dummy_grid(state):
-    # bootstrapping the algorithm: for now use grid sampling as
-    # a placeholder
-    global dgs
-    if dgs is None:
-        dgs = _dummy_grid_index(state.grid)
-    grid_point = next(dgs)
-    return state, grid_point
-
 def is_duplicate(state, grid_point):
     if grid_point in state.issued.grid_points:
         return True
+    for rank in state.archive:
+        for arch_ind in rank.individuals:
+            if grid_point == arch_ind.grid_point:
+                return True
     return False
 
 def doe_next(state):
@@ -158,7 +130,264 @@ def doe_next(state):
     return state, grid_point
 
 def evolve(state):
-    raise StopIteration()
-    state, grid_point = _sample_dummy_grid(state)
-    return state, grid_point
+    """
+    state (MOEAState)
+
+    This function produces a grid point by performing selection and
+    variation.  It is the primary means by which we search for
+    superior individuals in the problem space.
+    """
+    total_archive_occupancy = sum(r.occupancy for r in state.archive)
+    # if archive is too small, return doe_next
+    if total_archive_occupancy < 2:
+        return doe_next(state)
+    randint = state.randint
+
+    # Ramp is greater than -1, and it determines how likely each rank
+    # is to be selected for Parent B.
+    ramp = -1
+
+    duplicated = True
+    circuit_breaker = 0
+    while duplicated and circuit_breaker < 10:
+        # Select parent A from rank 0.  Parents A and B are grid points.
+        parent_a = _select(state, 0)
+        parent_b = parent_a
+        while parent_b == parent_a:
+            # Choose a rank for parent B.  Parent B's role is not symmetrical
+            # with parent A, unlike in traditional SBX.  This selection-and-
+            # variation procedure uses one or two variables from Parent B to mutate
+            # Parent A, so the offspring distribution is centered on Parent A.
+            # This is a lot more like a mutation operator with a 1/ndv rate
+            # than a traditional crossover operator.  But like DE, it is using
+            # the population to determine an appropriate step size.
+            rank_b = _select_rank(state, ramp)
+            ramp += 1
+            # Choose parent B from its rank.
+            parent_b = _select(state, rank_b)
+
+        # Find unequal decision variables.  (C99 allows variable-length
+        # arrays.  It's a stack allocation, but it would take a _huge_
+        # decision space to blow out the stack.  Still, it's a risk.
+        # The alternative would be to malloc a few extra index arrays
+        # into State.)
+        dv_equality = [aa == bb for aa, bb in zip(parent_a, parent_b)]
+        n_unequal_dvs = len(dv_equality) - sum(dv_equality)
+
+        # Choose whether to use one or two decision variables.
+        if n_unequal_dvs == 1:
+            n_dv_to_modify = 1
+        elif n_unequal_dvs > 1:
+            if randint(1,10) <= 9:
+                n_dv_to_modify = 1
+            else:
+                n_dv_to_modify = 2
+
+        # Apply SBX to 1 or 2 variables.
+        offspring = parent_a
+        previous_dv = -1
+        while n_dv_to_modify > 0:
+            # randomly select from the unequal decision variables
+            target = randint(0, n_unequal_dvs - 1)
+            target_index = None
+            counter = 0
+            for index, isequal in enumerate(dv_equality):
+                if not isequal:
+                    if counter == target:
+                        target_index = index
+                        break
+                    counter += 1
+
+            # Do SBX on the chosen variable, in index space.
+            result = sbx_index(
+                offspring[target_index],
+                parent_b[target_index],
+                len(state.grid.axes[target_index]),
+                state.random)
+
+            # Look up the name of the field so we can do _replace
+            field = offspring._fields[target_index]
+            offspring = offspring._replace(**{field: result})
+
+            # Prepare for next iteration
+            n_dv_to_modify -= 1
+            # Adjust dv_equality so that we don't hit the same DV again.
+            dv_equality[target_index] = True
+            n_unequal_dvs -= 1
+
+        # Treat the offspring as a direction for a line search.
+        # If the offspring is not duplicated, we'll just get it back.
+        offspring, duplicated = _line_search(state, parent_a, offspring)
+
+        # Increment the "circuit breaker" so that we don't line search
+        # forever in a saturated space
+        circuit_breaker += 1
+
+    # If everything failed, return a doe point
+    if duplicated:
+        return doe_next(state)
+
+    return state, offspring
+
+def sbx_index(aa, bb, allowed, random):
+    """
+    Perform SBX on indices.  Return a new index.
+
+    TODO: allow to parameterize DI.
+
+    aa (int >= 0): an index
+    bb (int >= 0): an index
+    allowed (int > 1): number of allowed indices
+    """
+    if allowed == 1:
+        raise Exception("This operation will always return 0!")
+    rounded_result = aa
+    while rounded_result == aa:
+        result = sbx(0.0, float(allowed-1), float(aa), float(bb), 15.0, random)
+        difference = result - aa
+        if difference > 0:
+            rounded_result = aa + int(ceil(difference))
+            if rounded_result >= allowed:
+                rounded_result = allowed - 1
+        elif difference < 0:
+            rounded_result = aa + int(floor(difference))
+            if rounded_result < 0:
+                rounded_result = 0
+    return rounded_result
+
+def sbx(x_lower, x_upper, x_parent1, x_parent2, di, random):
+    """
+    Perform SBX on one variable.
+
+    x_lower (float): lower bound on DV
+    x_upper (float): upper bound on DV
+    x_parent1 (float): primary parent value
+    x_parent2 (float): secondary parent value
+    di (float, nonnegative): distribution index
+    """
+    x_range = x_upper - x_lower
+    gamma = di + 1.0
+    kappa = 1.0 / gamma
+    if x_parent1 == x_parent2:
+        # early return if parents are the same
+        return x_parent1
+    swapped = False
+    if x_parent1 < x_parent2:
+        y_1 = (x_parent1 - x_lower) / x_range
+        y_2 = (x_parent2 - x_lower) / x_range
+    else:
+        swapped = True
+        y_2 = (x_parent1 - x_lower) / x_range
+        y_1 = (x_parent2 - x_lower) / x_range
+    delta = y_2 - y_1
+    beta = 1.0 + (2.0/delta) * min(y_1, 1-y_2)
+    alpha = 2.0 - beta ** (-gamma)
+    uniform_1 = random()
+    if uniform_1 <= 1.0 / alpha:
+        beta_q = (uniform_1 * alpha) ** kappa
+    else:
+        beta_q = (1.0 / (2.0 - uniform_1 * alpha)) ** kappa
+        # This assertion is not true! assert(beta_q <= 1.0)
+    if swapped:
+        sign = -1.0
+    else:
+        sign = 1.0
+    y_child = 0.5 * ((y_1 + y_2) + sign * beta_q * delta)
+    x_child = x_lower + x_range * y_child
+    return x_child
+
+def _line_search(state, parent, offspring):
+    """
+    state (MOEAState)
+    parent (GridPoint)
+    offspring (GridPoint)
+
+    Do a line search in the parent->offspring direction
+
+    Return a grid point and whether or not that point is duplicated.
+    (grid_point, duplicated)
+    """
+    if not is_duplicate(state, offspring):
+        return offspring, False
+    # See comment in evolve() about stack allocation versus heap
+    # allocation for "working" indices and flags.
+    step = [o - p for o, p in zip(offspring, parent)]
+    abstep = [abs(s) for s in step]
+    signstep = [(int(s >= 0) * 2 - 1) * int(s != 0) for s in step]
+    threshold = max(abstep)
+    counters = [0 for _ in abstep]
+    duplicated = True
+    location = [o for o in offspring]
+    while duplicated:
+        for ii in range(len(counters)):
+            counters[ii] += abstep[ii]
+            if counters[ii] >= threshold:
+                counters[ii] = counters[ii] % threshold
+                location[ii] = location[ii] + signstep[ii]
+                if location[ii] < 0:
+                    return (offspring, True) # line search failed!!!
+                elif location[ii] >= len(state.grid.axes[ii]):
+                    return (offspring, True) # line search failed!!!
+        offspring = state.grid.GridPoint(*location)
+        duplicated = is_duplicate(offspring)
+    return offspring, duplicated
+
+def _select_rank(state, ramp):
+    """
+    ramp (float): Weighting ramp for relative rank probability.
+                  Ramp is greater than or equal to -1.
+
+    Returns the index of a rank to sample.
+    """
+    if -1.0 <= ramp:
+        pass # in the domain
+    else:
+        raise Exception("Ramp {} is not greater than -1".format(ramp))
+    occupied_ranks = 0
+    for rank in state.archive:
+        if rank.occupancy == 0:
+            break
+        occupied_ranks += 1
+    limit = occupied_ranks * occupied_ranks
+    limit = limit + sum(ramp * r for r in range(occupied_ranks))
+    selection = state.randint(0, limit-1)
+    rank_number = 0
+    accumulator = 0
+    while accumulator < selection:
+        accumulator = accumulator + occupied_ranks + ramp * rank_number
+        rank_number += 1
+    if rank_number > occupied_ranks:
+        # should never happen!
+        rank_number = occupied_ranks - 1
+    return rank_number
+
+def _select(state, rank_number):
+    """
+    rank_number (index):  An index into the archive.
+
+    Returns a GridPoint from the given rank.
+    If the rank is empty, raises an Exception.
+    If the rank number is outside the archive, raises
+    an IndexError.  Don't do that!
+    """
+    rank = state.archive[rank_number]
+    if rank.occupancy == 0:
+        raise Exception("Can't select from an empty rank.")
+    randint = state.randint
+    target = randint(0, rank.occupancy - 1)
+    counter = -1
+    index = -1
+    while counter < target:
+        index += 1
+        if rank.individuals[index].valid:
+            counter += 1
+        if index > len(rank.individuals):
+            # Should never get here because occupancy is the number
+            # of valid individuals in the rank.  If we do, it's because
+            # of a bookkeeping failure somewhere else.  Probably in
+            # move_individual.  Be very careful about updating the
+            # contents of rank.individuals, because it's mutable!  Old
+            # Ranks will be wrong about occupancy.
+            raise Exception("Rank {} is inconsistent!".format(rank_number))
+    return rank.individuals[index].grid_point
 
