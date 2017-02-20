@@ -155,7 +155,6 @@ def doe_next(state):
                 state = state._replace(doestate=doestate)
                 raise NearExhaustionWarning(state)
     state = state._replace(doestate=doestate)
-    #state, sample = _sample_dummy_grid(state)
     return state, grid_point
 
 def evolve(state):
