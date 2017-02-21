@@ -23,9 +23,14 @@ def is_duplicate(state, grid_point):
     if grid_point in state.issued.grid_points:
         return True
     for rank in state.archive:
+        counter = 0
         for arch_ind in rank.individuals:
-            if grid_point == arch_ind.grid_point:
-                return True
+            if counter >= rank.occupancy:
+                break
+            if arch_ind.valid:
+                counter += 1
+                if grid_point == arch_ind.grid_point:
+                    return True
     return False
 
 def doe_next(state):
