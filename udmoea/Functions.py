@@ -24,6 +24,7 @@ from .Structures import DOEState
 from .Structures import Axis
 from .Structures import Grid
 from .Structures import GridPoint
+from .Structures import Issue
 from .Structures import Issued
 from .Structures import MOEAState
 
@@ -100,9 +101,10 @@ def create_moea_state(problem, **kwargs):
     rank_A = _empty_rank(problem, float_values, ranksize)
     rank_B = _empty_rank(problem, float_values, ranksize)
     issued = Issued(
-        [grid.GridPoint(*(-1 for _ in problem.decisions))
+        [Issue(grid.GridPoint(*(-1 for _ in problem.decisions)), False)
          for _ in range(ranksize)],
-        0)
+        0,
+        set())
     # initial DOE state is: do an OFAT DOE
     doestate = DOEState(CENTERPOINT, OFAT, 0, 0)
 
@@ -180,6 +182,23 @@ def return_evaluated_individual(state, individual):
     else:
         decisions = tuple()
     grid_point = decisions_to_grid_point(state.grid, individual.decisions)
+    issues = state.issued.issues
+    for ii in range(len(issues)):
+        issue = issues[ii]
+        if issue.outstanding and issue.grid_point == grid_point:
+            issues[ii] = issue._replace(outstanding=False)
+            issued_set = state.issued.issued_set
+            issued_set.remove(grid_point)
+            # These _replace calls are not strictly necessary
+            # because we're mutating internal structures, but
+            # I have a "don't change without calling _replace" rule
+            # for myself.
+            issued = state.issued._replace(
+                issues=issues,
+                issued_set=issued_set)
+            state._replace(issued=issued)
+            break
+
     # ArchiveIndividuals always sort with < and we reverse the transformation
     # when returning Individuals.
     problem = state.problem
@@ -286,13 +305,16 @@ def get_sample(state):
         state, grid_point = evolve(state)
 
     # Add grid_point to issued list
-    grid_points = state.issued.grid_points
+    issues = state.issued.issues
     index = state.issued.index
-    grid_points[index] = grid_point
+    issues[index] = Issue(grid_point, True)
+    issued_set = state.issued.issued_set
+    issued_set.add(grid_point)
     state = state._replace(
         issued=state.issued._replace(
-            grid_points=grid_points,
-            index=(index + 1) % len(grid_points)
+            issues=issues,
+            issued_set=issued_set,
+            index=(index + 1) % len(issues)
     ))
 
     grid = state.grid

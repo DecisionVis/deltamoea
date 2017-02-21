@@ -77,10 +77,23 @@ Grid = namedtuple("Grid", (
     "Sample",       # a namedtuple type to use for samples in decision space
 ))
 
+# Issue: a GridPoint, and an outstanding flag indicating whether that
+# GridPoint is still outstanding.
+Issue = namedtuple("Issue", (
+    "grid_point",   # a GridPoint
+    "outstanding",  # whether the grid point represents an outstanding sample
+))
+
 # Issued: rolling record of issued samples
+# The issued_set member is a cheat -- it breaks my
+# restriction on dynamic data structures.  This is ok
+# because we can do without it in the C version -- it's
+# just there to accelerate scans that are slow in the
+# first place because we're using Python.
 Issued = namedtuple("Issued", (
-    "grid_points",  # a list of GridPoints
+    "issues",       # a list of Issue
     "index",        # where we should write the next sample
+    "issued_set",   # set of outstanding grid points (Python acceleration)
 ))
 
 # Algorithm state at some point in time.

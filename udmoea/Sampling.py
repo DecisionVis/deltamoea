@@ -20,7 +20,7 @@ class TotalExhaustionError(Exception):
         self.state = state
 
 def is_duplicate(state, grid_point):
-    if grid_point in state.issued.grid_points:
+    if grid_point in state.issued.issued_set:
         return True
     for rank in state.archive:
         counter = 0
