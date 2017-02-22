@@ -22,15 +22,17 @@ class TotalExhaustionError(Exception):
 def is_duplicate(state, grid_point):
     if grid_point in state.issued.issued_set:
         return True
-    for rank in state.archive:
-        counter = 0
-        for arch_ind in rank.individuals:
-            if counter >= rank.occupancy:
-                break
-            if arch_ind.valid:
-                counter += 1
-                if grid_point == arch_ind.grid_point:
-                    return True
+    if grid_point in state.archive_set:
+        return True
+    #for rank in state.archive:
+    #    counter = 0
+    #    for arch_ind in rank.individuals:
+    #        if counter >= rank.occupancy:
+    #            break
+    #        if arch_ind.valid:
+    #            counter += 1
+    #            if grid_point == arch_ind.grid_point:
+    #                return True
     return False
 
 def doe_next(state):
@@ -247,7 +249,7 @@ def sbx_index(aa, bb, allowed, random):
         raise Exception("This operation will always return 0!")
     rounded_result = aa
     while rounded_result == aa:
-        result = sbx(0.0, float(allowed-1), float(aa), float(bb), 15.0, random)
+        result = sbx(0.0, float(allowed-1), float(aa), float(bb), 1.0, random)
         difference = result - aa
         if difference > 0:
             rounded_result = aa + int(ceil(difference))

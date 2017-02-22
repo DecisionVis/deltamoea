@@ -104,10 +104,18 @@ def sort_into_archive(state, archive_individual):
     last_rank, rank_A = fill_rank_from_rank(last_rank, rank_A)
     archive[-1] = last_rank
 
+    # if there's anything left in rank A, discard the grid points
+    # from the archive set
+    archive_set = state.archive_set
+    for arch_ind in rank_A.individuals:
+        if arch_ind.valid:
+            archive_set.difference_update((arch_ind.grid_point,))
+
     state = state._replace(
         rank_A=rank_A,
         rank_B=rank_B,
-        archive=archive)
+        archive=archive,
+        archive_set=archive_set)
 
     return state
 

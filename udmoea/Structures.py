@@ -97,11 +97,17 @@ Issued = namedtuple("Issued", (
 ))
 
 # Algorithm state at some point in time.
+# The archive_set member is a cheat in the same way as
+# the issued_set member of Issued is a cheat.  It lets
+# us take advantage of Python's fast hash-table lookup
+# instead of doing expensive (especially in Python)
+# table scans.
 MOEAState = namedtuple("MOEAState", (
     "problem",             # a Problem
     "float_values",        # RETAIN or DISCARD floating point decision values
     "grid",                # a Grid
     "archive",             # a list of Ranks
+    "archive_set",         # a set of returned grid points for Python acceleration
     "rank_A",              # an extra Rank, needed for sorting
     "rank_B",              # an extra Rank, needed for sorting
     "issued",              # an Issued structure

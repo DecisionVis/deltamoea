@@ -113,6 +113,7 @@ def create_moea_state(problem, **kwargs):
         float_values,
         grid,
         archive,
+        set(), # archive_set for Python acceleration
         rank_A,
         rank_B,
         issued,
@@ -182,6 +183,9 @@ def return_evaluated_individual(state, individual):
     else:
         decisions = tuple()
     grid_point = decisions_to_grid_point(state.grid, individual.decisions)
+    archive_set = state.archive_set
+    archive_set.add(grid_point)
+    state._replace(archive_set=archive_set)
     issues = state.issued.issues
     for ii in range(len(issues)):
         issue = issues[ii]
