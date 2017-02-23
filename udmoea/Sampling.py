@@ -159,68 +159,106 @@ def evolve(state):
     while duplicated and circuit_breaker < 10:
         # Select parent A from rank 0.  Parents A and B are grid points.
         parent_a = _select(state, 0)
-        parent_b = parent_a
-        while parent_b == parent_a:
-            # Choose a rank for parent B.  Parent B's role is not symmetrical
-            # with parent A, unlike in traditional SBX.  This selection-and-
-            # variation procedure uses one or two variables from Parent B to mutate
-            # Parent A, so the offspring distribution is centered on Parent A.
-            # This is a lot more like a mutation operator with a 1/ndv rate
-            # than a traditional crossover operator.  But like DE, it is using
-            # the population to determine an appropriate step size.
-            rank_b = _select_rank(state, ramp)
-            ramp += 1
-            # Choose parent B from its rank.
-            parent_b = _select(state, rank_b)
-
-        # Find unequal decision variables.  (C99 allows variable-length
-        # arrays.  It's a stack allocation, but it would take a _huge_
-        # decision space to blow out the stack.  Still, it's a risk.
-        # The alternative would be to malloc a few extra index arrays
-        # into State.)
-        dv_equality = [aa == bb for aa, bb in zip(parent_a, parent_b)]
-        n_unequal_dvs = len(dv_equality) - sum(dv_equality)
-
-        # Choose whether to use one or two decision variables.
-        if n_unequal_dvs == 1:
+        if randint(1, 10) == 1:
+            # do continuous injection
+            draw = randint(0, 99)
+            breaks = (10,30,60,80,90,95,100)
             n_dv_to_modify = 1
-        elif n_unequal_dvs > 1:
-            if randint(1,10) <= 9:
-                n_dv_to_modify = 1
-            else:
-                n_dv_to_modify = 2
+            for ii, limit in enumerate(breaks):
+                count = ii + 1
+                if draw >= limit or count == len(parent_a):
+                    n_dv_to_modify = count
+                    break
+            offspring = parent_a
+            while n_dv_to_modify > 0:
+                n_dv_to_modify -= 1
+                dv_index = randint(0, len(parent_a) - 1)
+                while offspring[dv_index] != parent_a[dv_index]:
+                    # don't repeat yourself
+                    dv_index = randint(0, len(parent_a.decisions) - 1)
+                axis = state.grid.axes[dv_index]
+                field = offspring._fields[dv_index]
+                new_index = randint(0, len(axis) - 2)
+                # cut a hole for the current index
+                # (hence the -2 above)
+                if new_index >= offspring[dv_index]:
+                    new_index += 1
+                offspring = offspring._replace(**{field: new_index})
+        else:
+            # do SBX
+            parent_b = parent_a
+            while parent_b == parent_a:
+                # Choose a rank for parent B.  Parent B's role is not symmetrical
+                # with parent A, unlike in traditional SBX.  This selection-and-
+                # variation procedure uses one or two variables from Parent B to mutate
+                # Parent A, so the offspring distribution is centered on Parent A.
+                # This is a lot more like a mutation operator with a 1/ndv rate
+                # than a traditional crossover operator.  But like DE, it is using
+                # the population to determine an appropriate step size.
+                rank_b = _select_rank(state, ramp)
+                ramp += 1
+                # Choose parent B from its rank.
+                parent_b = _select(state, rank_b)
 
-        # Apply SBX to 1 or 2 variables.
-        offspring = parent_a
-        previous_dv = -1
-        while n_dv_to_modify > 0:
-            # randomly select from the unequal decision variables
-            target = randint(0, n_unequal_dvs - 1)
-            target_index = None
-            counter = 0
-            for index, isequal in enumerate(dv_equality):
-                if not isequal:
-                    if counter == target:
-                        target_index = index
-                        break
-                    counter += 1
+            # Find unequal decision variables.  (C99 allows variable-length
+            # arrays.  It's a stack allocation, but it would take a _huge_
+            # decision space to blow out the stack.  Still, it's a risk.
+            # The alternative would be to malloc a few extra index arrays
+            # into State.)
+            dv_equality = [aa == bb for aa, bb in zip(parent_a, parent_b)]
+            n_unequal_dvs = len(dv_equality) - sum(dv_equality)
 
-            # Do SBX on the chosen variable, in index space.
-            result = sbx_index(
-                offspring[target_index],
-                parent_b[target_index],
-                len(state.grid.axes[target_index]),
-                state.random)
+            # Choose how many DVs to mutate
+            # Here's a performance distribution based on a weak sparsity
+            # of effects assumption.
+            # 10% 1 variable 10
+            # 20% 2 variable 30
+            # 30% 3 variable 60
+            # 20% 4 variable 80
+            # 10% 5 variable 90
+            # 5%  6 variable 95
+            # 5%  7 variable 100
+            draw = randint(0, 99)
+            breaks = (10,30,60,80,90,95,100)
 
-            # Look up the name of the field so we can do _replace
-            field = offspring._fields[target_index]
-            offspring = offspring._replace(**{field: result})
+            n_dv_to_modify = 1
+            for ii, limit in enumerate(breaks):
+                count = ii + 1
+                if n_unequal_dvs <= count or draw < limit:
+                    n_dv_to_modify = count
+                    break
 
-            # Prepare for next iteration
-            n_dv_to_modify -= 1
-            # Adjust dv_equality so that we don't hit the same DV again.
-            dv_equality[target_index] = True
-            n_unequal_dvs -= 1
+            # Apply SBX 
+            offspring = parent_a
+            previous_dv = -1
+            while n_dv_to_modify > 0:
+                # randomly select from the unequal decision variables
+                target = randint(0, n_unequal_dvs - 1)
+                target_index = None
+                counter = 0
+                for index, isequal in enumerate(dv_equality):
+                    if not isequal:
+                        if counter == target:
+                            target_index = index
+                            break
+                        counter += 1
+
+                # Do SBX on the chosen variable, in index space.
+                result = sbx_index(
+                    offspring[target_index],
+                    parent_b[target_index],
+                    len(state.grid.axes[target_index]),
+                    state.random)
+
+                # Look up the name of the field so we can do _replace
+                field = offspring._fields[target_index]
+                offspring = offspring._replace(**{field: result})
+
+                # Prepare for next iteration
+                n_dv_to_modify -= 1
+                # Adjust dv_equality so that we don't hit the same DV again.
+                dv_equality[target_index] = True
+                n_unequal_dvs -= 1
 
         # Treat the offspring as a direction for a line search.
         # If the offspring is not duplicated, we'll just get it back.
