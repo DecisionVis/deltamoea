@@ -105,8 +105,8 @@ def create_moea_state(problem, **kwargs):
          for _ in range(ranksize)],
         0,
         set())
-    # initial DOE state is: do an OFAT DOE
-    doestate = DOEState(CENTERPOINT, OFAT, 0, 0)
+    # initial DOE state is: do 100 random samples
+    doestate = DOEState(RANDOM, COUNT, 0, 100)
 
     state = MOEAState(
         problem,
@@ -129,12 +129,12 @@ def doe(state, **kwargs):
     samples will begin to fill out a design of experiments
     on the decision space, rather than doing evolution
     on the archived individuals.  If this function is not
-    called, we will do OFAT.
+    called, we will do COUNT 100 by default.
 
     The DOE proceeds as:
+        corners         (2 ^ ndv samples)
         center point    (1 sample)
         OFAT            (2 * ndv samples)
-        corners         (2 ^ ndv samples)
         random uniform  (unlimited samples)
 
     If a different DOE procedure works better for your problem,
@@ -146,8 +146,8 @@ def doe(state, **kwargs):
     keywords:
         terminate (CENTERPOINT, OFAT, CORNERS, COUNT):
             indicates stage after which to switch from
-            DOE to evolution. Defaults to OFAT, which
-            means 2 * ndv + 1 samples will be generated
+            DOE to evolution. Defaults to COUNT 100, which
+            means 100 random samples will be generated
             before evolution starts.  If you have a lot
             of decision variables and choose CORNERS,
             you may never finish doing your DOE, but if
@@ -158,16 +158,20 @@ def doe(state, **kwargs):
         count (int): Number of DOE samples to perform, if COUNT
             is specified as a DOE termination condition.
             Default is 2 * ndv + 1.
+        stage (CORNERS, CENTERPOINT, OFAT, RANDOM): at which
+            stage to start sampling.
     """
-    terminate = kwargs.get("terminate", OFAT)
+    terminate = kwargs.get("terminate", COUNT)
+    stage = kwargs.get("stage", RANDOM)
     if terminate == COUNT:
-        default_count = 2 * len(state.problem.decisions) + 1
+        default_count = len(state.problem.decisions)
         count = kwargs.get("count", default_count)
     else:
         count = 0
     old_doestate = state.doestate
     new_doestate = old_doestate._replace(
         terminate=terminate,
+        stage=stage,
         remaining=count)
     new_state = state._replace(doestate=new_doestate)
     return new_state

@@ -70,7 +70,7 @@ def doe_next(state):
             grid_point = grid.GridPoint(*indices)
             advanced_counter = counter + 1
             if advanced_counter // 2 >= len(grid.axes):
-                doestate = doestate._replace(stage=CORNERS, counter=0)
+                doestate = doestate._replace(stage=RANDOM, counter=0)
             else:
                 doestate = doestate._replace(counter=advanced_counter)
         elif stage == CORNERS:
@@ -87,7 +87,7 @@ def doe_next(state):
             grid_point = grid.GridPoint(*indices)
             advanced_counter = doestate.counter + 1
             if advanced_counter >= 2 ** len(grid.axes):
-                doestate = doestate._replace(stage=RANDOM, counter=0)
+                doestate = doestate._replace(stage=CENTERPOINT, counter=0)
             else:
                 doestate = doestate._replace(counter=advanced_counter)
         elif stage in (RANDOM, EXHAUSTED):
