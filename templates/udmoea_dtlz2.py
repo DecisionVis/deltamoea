@@ -33,10 +33,10 @@ from problems.problems import dtlz2_rotated
 from problems.problems import dtlz2_max
 
 def the_deltas():
-    yield 1.0
     yield 0.3
     yield 0.1
     yield 0.07
+    yield 1.0 # this used to be first, but it really messes with nonrotated DTLZ2
     while True:
         yield 0.1
 
@@ -71,8 +71,7 @@ def run_experiment(runtime_file, rotation_seed, udmoea_seed, nfe):
     # Optionally, specify alternative DOE terminating conditions.
     # For the 4,2 DTLZ2 in this example, it does make sense
     # because there are so few decision variables.
-    state = doe(state, terminate=COUNT, count=100)
-    state = state._replace(doestate=state.doestate._replace(stage=RANDOM))
+    #state = doe(state, terminate=COUNT, count=100)
 
     Record = namedtuple("Record", [
         'rotation_seed',
