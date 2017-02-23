@@ -452,3 +452,227 @@ I was dumping out.
 Well, that's OK, we just have a different table for each
 problem.  Then we also make a metadata table that explains
 what each problem is.
+
+The problem is that the metadata table itself is going to
+have some variable fields.  Well, it doesn't have to.
+
+## Problem Metadata
+
+* Problem ID
+* nickname (text)
+* description (text)
+* family (text)
+* N Decisions
+* N Objectives
+* N Constraints
+* N Tagalongs
+* evaluations table name (text)
+
+We'll set up Problem Metadata by hand whenever we're
+making a new problem.
+
+## Decisions
+
+* Problem ID
+* number
+* name
+* lower
+* upper
+* delta
+
+## Objectives
+
+* Problem ID
+* number
+* name
+* sense
+* epsilon
+
+## Constraints
+
+* Problem ID
+* number
+* name
+* sense
+
+## Tagalongs
+
+* Problem ID
+* number
+* name
+
+## Run Metadata
+
+* runid (uuid)
+* Problem ID
+* Target NFE
+* Algorithm
+* Commit ID
+
+## Run Timing
+
+### Starts
+
+* runid
+* start time
+
+### Completions
+
+* runid
+* end time
+* nfe
+* reason for termination
+
+### Evaluations (different table for each problem)
+
+Tables are named `evaluations_nickname` unless there's a
+nickname collision.  Each row is an evaluation.
+
+* runid
+* nfe
+* grid indices
+* decisions
+* objectives
+* grid objectives (objectives evaluated at the grid point)
+* constraints
+* tagalongs
+
+# I Think That's It
+
+Let's start by setting up a database by hand to see how it feels.
+
+```
+CREATE TABLE problems (
+    problem_id INTEGER PRIMARY KEY,
+    nickname TEXT,
+    description TEXT,
+    family TEXT,
+    ndv INTEGER,
+    nobj INTEGER,
+    ncon INTEGER,
+    ntag INTEGER,
+    eval_table TEXT)
+```
+
+```
+INSERT INTO problems VALUES (
+    1,
+    "dtlz2_rot.100.2.0",
+    "dtlz2, rotated, 100 decision variables, 2 objectives, rotation seed 0",
+    "dtlz2",
+    100,
+    2,
+    0,
+    0,
+    "evaluations_dtlz2_rot_100_2_0")
+```
+
+```
+CREATE TABLE decisions(
+    problem_id INTEGER,
+    number INTEGER,
+    name TEXT,
+    lower NUMERIC,
+    upper NUMERIC,
+    delta NUMERIC)
+```
+
+```
+CREATE TABLE objectives(
+    problem_id INTEGER,
+    number INTEGER,
+    name TEXT,
+    sense TEXT,
+    epsilon NUMERIC)
+```
+
+```
+CREATE TABLE constraints(
+    problem_id INTEGER,
+    number INTEGER,
+    name TEXT,
+    sense TEXT)
+```
+
+```
+CREATE TABLE tagalongs(
+    problem_id INTEGER,
+    number INTEGER,
+    name TEXT)
+```
+
+```
+CREATE TABLE runs(
+    run_id TEXT,
+    problem_id INTEGER,
+    target_nfe INTEGER,
+    algorithm TEXT,
+    commit_id TEXT,
+    prng_seed INTEGER)
+CREATE TABLE starts(
+    run_id TEXT,
+    starttime TEXT)
+CREATE TABLE completions(
+    run_id TEXT,
+    endtime TEXT,
+    nfe INTEGER,
+    reason TEXT)
+```
+
+To do decisions:
+
+```
+def the_deltas():
+    yield 0.3
+    yield 0.1
+    yield 0.07
+    yield 1.0
+    while True:
+        yield 0.1
+deltas = the_deltas()
+for ii in range(100):
+    query = "INSERT INTO decisions VALUES (1, ?, ?, 0.0, 1.0, ?)"
+    name = "decision{}".format(ii)
+    delta = next(deltas)
+    runs.execute(query, (ii, name, delta))
+```
+
+And objectives:
+
+```
+for ii in range(2):
+    query = "INSERT INTO objectives VALUES(1, ?, ?, 'MINIMIZE', 0.1)"
+    runs.execute(query, (ii, "objective{}".format(ii)))
+```
+
+Let's not forget evaluations.
+
+```
+query = "create table evaluations_dtlz2_rot_100_2_0(run_id TEXT, nfe INTEGER, {})"
+grid = ["grid{} INTEGER".format(ii) for ii in range(100)]
+decisions = ["decision{} NUMERIC".format(ii) for ii in range(100)]
+objectives = ["objective{} NUMERIC".format(ii) for ii in range(2)]
+grid_objectives = ["grid_objective{} NUMERIC".format(ii) for ii in range(2)]
+query = query.format(", ".join(grid+decisions+objectives+grid_objectives))
+runs.execute(query)
+runs.commit()
+```
+
+# Spinning up Runs
+
+With the problem definition out of the way, I'd like to
+start spinning up runs.  That means altering my performance
+comparing scripts so that they database their results.
+(We can put off for now writing the script that sets up
+a problem.  I've captured all of the steps and I can work
+on that while runs are going.)
+
+This brings us back to the ZMQ question.  The only thing
+I really need at this point is a data sink.  Naturally
+I want to run that on PC9, since that's where I do everything.
+
+Actually, before I even get to ZMQ, why not just write a
+slightly different wrapper than the CSV-writing one, that
+connects directly to a sqlite3 file and just does the
+equivalent of the CSV writing, but straight to database?
+That's going to get me off the ground fastest.
