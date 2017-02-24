@@ -667,13 +667,13 @@ comparing scripts so that they database their results.
 a problem.  I've captured all of the steps and I can work
 on that while runs are going.)
 
-This brings us back to the ZMQ question.  The only thing
-I really need at this point is a data sink.  Naturally
-I want to run that on PC9, since that's where I do everything.
+This brings us back to the ZMQ question.  The only thing I
+really need at this point is a data sink.  Naturally I want
+to run that on PC9, since that's where I do everything.
 
-Actually, before I even get to ZMQ, why not just write a
-slightly different wrapper than the CSV-writing one, that
-connects directly to a sqlite3 file and just does the
+Actually, before I even get to ZMQ, why not just write
+a slightly different wrapper than the CSV-writing one,
+that connects directly to a sqlite3 file and just does the
 equivalent of the CSV writing, but straight to database?
 That's going to get me off the ground fastest.
 
@@ -681,21 +681,79 @@ That's going to get me off the ground fastest.
 
 2017-02-23 20:25
 
-I did 30 seed runs of UDMOEA on 100/2 rotation 0.
-To do 30 runs of Borg, I need to set Borg up the same way I did UDMOEA.
+I did 30 seed runs of UDMOEA on 100/2 rotation 0.  To do
+30 runs of Borg, I need to set Borg up the same way I
+did UDMOEA.
 
-Equally important, I need to set up metrics.  Recall that I want to see
-HV and epsilon-HV evolving over time.  Also, I wanted to come up with
-a metric that respected decision space.  What if I do this: take every
-evaluation ever.  Pareto Rank them all by grid_objectives.  Figure out
-their grid indices.  Now we have a rank for each set of grid indicies.
-Now, for every NFE, determine the archive of each MOEA and determine
-which grid boxes its archive occupies.  Then average (median?) the rank
-of the occupied grid boxes is your metric.
+Equally important, I need to set up metrics.  Recall that
+I want to see HV and epsilon-HV evolving over time.  Also,
+I wanted to come up with a metric that respected decision
+space.  What if I do this: take every evaluation ever.
+Pareto Rank them all by grid_objectives.  Figure out
+their grid indices.  Now we have a rank for each set of
+grid indicies.  Now, for every NFE, determine the archive
+of each MOEA and determine which grid boxes its archive
+occupies.  Then average (median?) the rank of the occupied
+grid boxes is your metric.
 
-See analysis in my ongoing ipython notebook, which I've hooked up to the
-database.
+See analysis in my ongoing ipython notebook, which I've
+hooked up to the database.
 
 2017-02-23 21:18
 
+# Borg
 
+2017-02-24 08:51
+
+My strategy for Borg will be to copy the UDMOEA runner
+and have it do the same thing, except with Borg.
+
+2017-02-24 10:58
+
+It's running now.  The next thing to do is... actually
+I'm not sure.
+
+Maybe I want a tool for defining different problems?
+
+Maybe I want to be able to do parallel runs?
+
+Doing parallel runs means I really want to do the
+databasing on PC9 while distributing runs to other machines
+(16 and 19 mainly).
+
+My first step in that direction is to write the
+single-machine multiprocessing version of this.  It will
+spawn as many runs as it can afford the memory for.
+(Not too many for UDMOEA, because of its intentionally
+hefty memory requirement.)
+
+How much memory am I using?  I'd allow 4G, although I don't
+think it's quite that much.  With room for the OS and other
+userland stuff, that only lets me do 3 runs in parallel.
+
+Do note that this is not something I consider a general
+problem.  The big memory allotment is partly due to my
+choice of a problem with 100 variables and partly due
+to the 100x10000 archive.  These numbers were chosen on
+purpose to take advantage of modern hardware.  The only
+people who are going to want to run actual instances of
+UDMOEA in parallel are me, i.e. anybody who wants to do
+an algorithm shootout.
+
+But at any rate, it means that we would be well served
+to mix and match, so that we don't have more than a few
+UDMOEAs going at once.  The alternative there is to try
+out shelve, at a massive hit to performance.  Or maybe use
+a memmapped SQLite database.  Also probably at a massive
+hit to performance.  I potentially prefer the latter.
+
+But never mind.  Just because we can address memory use,
+doesn't mean we should.
+
+Oooh, and then there's metrics.  So much to do.
+
+Non-metrically speaking, after 30 seeds, Borg appears
+to have a slight advantage.  But again, I need metrics
+to make it clearer.  Also, I want to have metrics over
+time, to make the case that we do better in the early
+part of the run.
