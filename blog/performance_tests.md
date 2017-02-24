@@ -676,3 +676,26 @@ slightly different wrapper than the CSV-writing one, that
 connects directly to a sqlite3 file and just does the
 equivalent of the CSV writing, but straight to database?
 That's going to get me off the ground fastest.
+
+# 30 Runs Later
+
+2017-02-23 20:25
+
+I did 30 seed runs of UDMOEA on 100/2 rotation 0.
+To do 30 runs of Borg, I need to set Borg up the same way I did UDMOEA.
+
+Equally important, I need to set up metrics.  Recall that I want to see
+HV and epsilon-HV evolving over time.  Also, I wanted to come up with
+a metric that respected decision space.  What if I do this: take every
+evaluation ever.  Pareto Rank them all by grid_objectives.  Figure out
+their grid indices.  Now we have a rank for each set of grid indicies.
+Now, for every NFE, determine the archive of each MOEA and determine
+which grid boxes its archive occupies.  Then average (median?) the rank
+of the occupied grid boxes is your metric.
+
+See analysis in my ongoing ipython notebook, which I've hooked up to the
+database.
+
+2017-02-23 21:18
+
+
