@@ -757,3 +757,87 @@ to have a slight advantage.  But again, I need metrics
 to make it clearer.  Also, I want to have metrics over
 time, to make the case that we do better in the early
 part of the run.
+
+# Next Step: parallel
+
+2017-02-24 13:02
+
+So the plan is, we work out a simple multiprocessing-based
+parallelism and use it to do another dtlz2 100/2 problem
+rotation.
+
+How's that going to look?
+
+The evaluation function is going to look a lot like the
+one in the current databasing_results template, except
+it's not allowed to do its own sql queries.  Far and
+away the simplest thing to do from my point of view
+is to turn every `connection.execute` into a multiprocessing
+queue push.  Although if I'm going to go that far, why
+not just go all the way and use ZMQ to truly separate
+processes?  If we assume the processes don't crash, the
+main process can just spin up the optimization runs
+and the optimization runs can connect to a PULL socket
+that vacuums up the results.
+
+Setting up a problem:
+
+```
+sqlite3 runs.sqlite3 "INSERT INTO problems VALUES(2, 'dtlz2_rot_100_2_1', 'dtlz2, rotated, 100 decision variables, 2 objectives, rotation seed 1', 'dtlz2', 100, 2, 0, 0, 'evaluations_dtlz2_rot_100_2_1')"
+```
+
+And in ipython:
+
+```
+runs = sqlite3.connect("runs.sqlite3")
+ndv = 100
+nobj = 2
+rotation = 1
+nickname = "dtlz2_rot_{}_{}_{}".format(ndv, nobj, rotation)
+tablename = "evaluations_{}".format(nickname)
+query = "create table {}(run_id TEXT, nfe INTEGER, {})"
+grid = ["grid{} INTEGER".format(ii) for ii in range(ndv)]
+ndv = ["decision{} NUMERIC".format(ii) for ii in range(ndv)]
+objectives = ["objective{} NUMERIC".format(ii) for ii in range(nobj)]
+grid_objectives = ["grid_objective{} NUMERIC".format(ii) for ii in range(nobj)]
+query = query.format(tablename, ", ".join(grid+decisions+objectives+grid_objectives))
+runs.execute(query)
+runs.commit()
+```
+
+# Parallel Problems
+
+Parallel evaluation seems to have a distinct problem.
+Using msgpack and sqlite3 adds so much overhead that it
+would be faster to run in serial!  Lose, lose.  This is
+the problem with databasing so much stuff!
+
+In principle, if my runs are completely repeatable, I
+can reproduce any given run without keeping all of its
+evaluations.  As long as my metrics *don't* include the
+heavy-duty rank-occupancy metric and I can reference my
+Pareto fronts to 0, I can at least do HV and epsilon-HV
+in parallel.  Then the only stuff I have to database is
+metadata and metrics.  Metrics are so much lighter that
+they're cheap to send and receive, unlike full evaluations.
+And you can roll big runs up into a single array....
+
+Actually, why send a single message when most of the time
+we want executemany?  We might be able to cut the overhead
+and keep the structure.
+
+Nope, doesn't seem to have helped.  No, the way to go
+here is to figure out the metrics in advance, make
+UDMOEA use mt19937ar for total repeatability, and
+compute the metrics during the run.  Forget about
+keeping the evaluations -- it's great for pretty pictures,
+but not sustainable from a data perspective.  And
+in the end it would be faster to repeat the runs
+and recompute the metrics than it would be to keep all
+of the evaluations.  It might even make sense to wait
+until the very end of the run to send the metrics over.
+
+2017-02-24 16:52
+
+So what does this mean for this weekend?  I'm not starting
+up any runs for over the weekend.
