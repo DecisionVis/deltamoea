@@ -311,3 +311,29 @@ and echoes.
 
 Writing the echoer was easy.
 
+2017-02-28 09:06
+
+One other thing -- deltas and epsilons.  I'm going
+to hard-code them for now, just like all of the other
+parameterization is hard-coded.  It's just one more
+thing, and I can't be bothered at this point.
+
+2017-02-28 10:54
+
+Why are my hypervolume numbers wrong?  Am I wrong about
+assuming minimization?  Yup.  `metricsystem` assumes
+minimization.  `wfg.py` assumes maximization.
+
+2017-02-28 12:08
+
+Actually, I need to be computing HV relative to a nadir,
+probably 10, 10, ...
+The reason is that weird axis fliers capture a lot of
+hypervolume relative to the origin.  Relative to a nadir,
+they add negligible hypervolume, and they make it so that
+hypervolume is a strictly increasing function of nfe.
+
+For Borg, we want to collect both HV and grid-HV, and in
+both cases what we actually compute will be epsilon-HV.
+
+

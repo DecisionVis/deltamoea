@@ -176,7 +176,6 @@ def move_individual(destination_rank, destination_index, source_rank, source_ind
 
 def _compare(left, right):
     """
-    problem (Problem): used for determining which comparisons to use
     left (Individual)
     right (Individual)
     """
