@@ -172,14 +172,14 @@ All this implies we have the `starts` and `completions`
 tables defined much as before.
 
 ```
-CREATE TABLE starts (
+CREATE TABLE dtlz2_starts (
     start_id INTEGER PRIMARY KEY,
     run_id INTEGER,
     starttime TEXT)
 ```
 
 ```
-CREATE TABLE completions (
+CREATE TABLE dtlz2_completions (
     start_id INTEGER,
     endtime TEXT,
     nfe INTEGER,
@@ -336,4 +336,48 @@ hypervolume is a strictly increasing function of nfe.
 For Borg, we want to collect both HV and grid-HV, and in
 both cases what we actually compute will be epsilon-HV.
 
+# Failure Patterns
 
+2017-03-01 08:38
+
+Working through how things fail, the worst case is if the
+DB writer fails, the jobrunner will need to be restarted.
+But that's what its SUB socket is for.  The workers should
+check out after blocking for a minute unable to talk to
+the DB writer, so the whole process is pretty hands off.
+Ideally, I don't have to stay logged into the worker
+machines.  Start a jobrunner with nohup and appropriate
+socket arguments, and we're off to the races.
+
+# Things That, For Now, Are Hard-Coded
+
+2017-03-01 10:47
+
+It might make sense for some or all of these to be captured
+in the database:
+
+* epsilons
+* deltas
+* nadir point
+
+For now, the fact that I keep everything under version
+control means that the commit id should be adequate to
+capture the conditions of the run.  So putting these
+things in the database isn't necessary, but it would
+certainly be more transparent.
+
+# Unanticipated Weirdness: In Which A Complex System Exhibits Emergent Behavior
+
+2017-03-01 13:15
+
+It's not that complex a system, either, but when I run
+the current UDMOEA worker with the database writer, the
+database writer eventually gets behind.  This applies
+backpressure to the workers, all at the same time.  They
+all pause optimization, and PC16 goes idle while the db
+writer catches up.  They have sufficiently long pauses
+that none of them dies, but at any rate they all come alive
+again at the same time.
+
+Solution: db writer should not do a commit every time it
+receives metrics.  Maybe every start / completion.
