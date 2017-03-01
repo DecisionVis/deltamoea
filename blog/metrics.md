@@ -381,3 +381,19 @@ again at the same time.
 
 Solution: db writer should not do a commit every time it
 receives metrics.  Maybe every start / completion.
+
+2017-03-01 16:39
+
+The biggest problem I face now is that it's difficult and
+potentially errorprone to create new problems and runs,
+and then to launch the runs.
+
+`define_problem.py` and `create_runs.py` will handle the
+creation side.  But to handle the actual launch, I need
+to write a whole bunch of stuff:
+
+* job submitter
+* job queue
+* job runner
+
+
