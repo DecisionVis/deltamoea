@@ -397,3 +397,128 @@ to write a whole bunch of stuff:
 * job runner
 
 
+# Multi-Threaded WFG
+
+With adequate refactoring I could have multiple
+wfg threads.  Wfg seems to be the limiting factor on
+throughput, especially when there are many objectives.
+So, for "fun", we should actually make this even more
+multi-threaded, where the optimization loop fans out
+to multiple wfg threads, which fan back in to a thread
+that talks to the DB writer.  The writer thread can
+apply backpressure, or simply die, and the effects of
+its absence will ripple backwards along the pipeline,
+causing the optimization run to terminate.
+
+# Job Distribution
+
+2017-03-02 10:26
+
+So all the rest is set up.  I just need a reasonable way
+of starting and distributing jobs.  Well, that and the Borg
+worker is a little behind the times and doesn't know about
+the DB writer yet.
+
+So, let's review how these things are supposed to connect
+to one another.
+
+## Job Runner
+
+The Job Runner needs to tell the worker:
+
+* run id
+* prng seed
+* max nfe
+* ndv
+* nobj
+* report socket
+
+And it needs to provide the worker with a rotation matrix
+on stdin.
+
+But that's only part of the story.  The other part of the
+story is that we've decided the job runner actually needs
+to set up a temporary directory for every worker, clone the
+repo into it, check out the right commit, and build WFG
+there.  Maybe we could have the job runner hold on to a
+directory for each commit, and cp -r it over for each
+worker.  If you remove the .git directory, the working
+tree is less than 1M.  We could release these temp
+directories when the jobrunner cleans up or gets restarted.
+
+So here's how we would handle a job:
+
+```
+Get a job from the job queue.  It specifies everything we
+need.  In addition to the list above, it includes a commit
+id.
+
+Check to see if we have a template directory for the commit.
+If we do, copy it over so that we can run the job there.
+If we don't create one by cloning the repo, checking out
+the target commit, deleting .git, and building wfg.
+
+Start the job using subprocess.Popen.
+```
+
+But that's just one part of the main loop.  The main loop
+looks more like this:
+
+```
+Poll the REQ socket and the SUB socket and the queue that
+tells us whether subprocesses have terminated.
+
+If we get a new job on the REQ socket, handle it as above.
+
+If we get a restart command on the SUB socket, it should
+tell us what commit to move to.  We'll fetch and check out
+that commit, then launch a new jobrunner as a subprocess.
+All of the arguments for the new jobrunner should also be
+supplied with the restart command.  After launching the
+new jobrunner, we allow any current runs to run out and
+then clean up after them.
+```
+
+About that queue: we're going to have to launch separate
+threads the block on the termination of the worker
+processes.  When they're done, these threads write to
+the queue.
+
+# Stopgap Submitter
+
+2017-03-02 13:10
+
+This is a pain to get right.  It's going to take me a while
+to get the jobrunner together, so I don't want to mess
+with the job queue at the moment.  I can bypass the whole
+queue / runner interaction by writing a stopgap submtter
+that talks straight to the job runners.  It's still kind
+of manual because the submitter _must_ be started first,
+and there's no way to get the job runners unstuck except
+over ssh.
+
+## Observations
+
+2017-03-02 16:06
+
+Now that I finally have a functioning job runner, what do I notice?
+
+If the job runner dies, it often dies with a spurious "ready"
+outstanding.  I.e. that ready state is no longer applicable.
+This means that we will send out a job and it will not run.
+
+In general, I plan to bring the job runners down in a more
+civilized fashion, but this does argue for resubmitting
+jobs we were expecting if it seems like they ought to have
+come back.  Actually, we can check if a start was ever
+registered, and if it wasn't we can resubmit after some
+amount of time.
+
+2017-03-02 16:43
+
+I managed to do a small trial of the create-problem, 
+create-run, execute-run via jobrunner workflow.  It kind of
+worked, but then I got attribute errors reported as the
+reason for termination.  Why would that happen?
+
+This was a 4,2 DTLZ2 with no rotation.
