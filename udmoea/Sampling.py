@@ -175,9 +175,11 @@ def evolve(state):
                 dv_index = randint(0, len(parent_a) - 1)
                 while offspring[dv_index] != parent_a[dv_index]:
                     # don't repeat yourself
-                    dv_index = randint(0, len(parent_a.decisions) - 1)
+                    dv_index = randint(0, len(parent_a) - 1)
                 axis = state.grid.axes[dv_index]
                 field = offspring._fields[dv_index]
+                # uniform random mutation, different sense
+                # of the word "index"
                 new_index = randint(0, len(axis) - 2)
                 # cut a hole for the current index
                 # (hence the -2 above)
