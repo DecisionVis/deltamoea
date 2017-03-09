@@ -522,3 +522,132 @@ worked, but then I got attribute errors reported as the
 reason for termination.  Why would that happen?
 
 This was a 4,2 DTLZ2 with no rotation.
+
+# Current Status / Todo
+
+2017-03-08 09:31
+
+* UDMOEA worker seems to do OK
+* Problem definition works fine
+* Run creation works fine
+* Lacking a submission script and a queue
+* Borg worker is out of date and unaware of ZMQ
+
+So the very first thing I need to do is come up with
+enough work so that I can keep my cluster spun up while
+I fill in the gaps.
+
+To that end, let's get specific about problem instances.
+
+Actually, before that, let's get specific about deltas and
+epsilons: let's make them all 0.1 for all problems.  The
+1.0 is great for a demo and a functionality test, but it's
+adding another layer of head-scratchery when comparing
+performance.
+
+2017-03-08 09:47
+
+OK, deltas and epsilons are now all 0.1.
+
+2017-03-08 21:09
+
+It was a day-long slog to get the workers and the database
+talking to each other in a sensible way, but we got there,
+and now we're starting to see interesting results.
+
+We've been doing only smaller problems, to start with.  The
+later runs will be bigger / harder.  But it's still quite
+interesting to see the patterns emerge.  So far, it looks
+like we tend to do better, and we tend to have a bigger
+advantage the harder the problem gets.  Which is
+interesting, with the caveat that this is still all DTLZ2,
+a problem with its own peculiar structure.  We do have some
+low-flying PRNG seeds, which is troubling.  I think a
+higher continuous injection rate would help.
+
+The next step will be defining workers for other problems.
+Possibly pull in Platypus to take advantage of its problem
+implementations.
+
+With that in mind, what do I need to do to define a
+different problem?  Let's look at this in terms of how
+we define a job.
+
+```
+Job = namedtuple("Job", (
+    "subject",          # always "job"
+    "run_id",           # int: run id
+    "commit_id",        # str: commit ID
+    "algorithm",        # "UDMOEA" or "Borg"
+    "prng_seed",        # int: prng seed
+    "max_nfe",          # int: termination condition
+    "ndv",              # int: number of DTLZ2 decision variables
+    "nobj",             # int: number of DTLZ2 objectives
+    "report_socket",    # str: socket for worker to talk to writer
+    "rotation_matrix",  # tuple of float, length ndv^2
+))
+```
+
+The job runner uses the algorithm to select the worker.
+Suppose we added more problems.  We could just add a column
+to the `problem` table, indiciating which problem.  And an
+attribute to the `Job` namedtuple, indicating the same.
+Then the jobrunner would choose the worker based on
+algorithm and problem.
+
+Now, there's a problem, and it is this: there are 48,360
+runs we need to do.  I've done about 5,000 of these in the
+last 4 hours.  That's with 80 cores, although
+possibly somewhat inefficiently because the workers are
+multithreaded and I've overscheduled the available cores.
+But it's going to take 36 more hours at that rate.  I can
+possibly improve the outlook by using more machines.
+I've got 5 (4 cores), 8 (8 cores) and 11 (8 cores).
+That's 20 more cores, conservatively a 25% boost.  I could
+also possibly use part of 9, but I'm reluctant to do that
+because I rely on it.
+
+2017-03-09 08:12
+
+Another interesting pattern: we have more of an advantage
+on rotated variants of DTLZ2 than on the unrotated
+variants.  Although we need more problems to really
+solidify that comparison.
+
+Another thought: the role of injection.  Really, the role
+of exploration versus exploitation.  Exploitation will get
+you trapped in local minima.  But it will find those minima.
+Exploration will find good regions but have a harder time
+exploiting them.  My continuous injection rate negotiates
+the tradeoff between exploration and exploitation.
+
+A lot of effort has been spent trying to find a way to
+deal with this tradeoff in other MOEAs.  Any lessons
+we take from these attempts must be taken in context --
+the gridded decision space and comprehensive archive will
+prevent many of the worst failures by making it impossible
+to sample the same point over and over.  But that doesn't
+make us immune to failures of exploration.  Just look at
+the terrible early results when I was doing a structured
+initial DOE.
+
+# Other Problems
+
+2017-03-09 15:02
+
+We can test against the Platypus project's implementations
+of a broad suite of test problems.
+
+The DTLZ series allows separate specification of ndv and
+nobj, WFG is by nobj and has non-unit ranges on the DVs,
+UF is fixed in the number of DVs and objectives, but some
+DVs are (0,1) and some are (-1,1).  CF is like UF but with
+constraints.  Finally, ZDT is all on 0,1 with fixed
+ndv and nobj, except that ZDT5 has binary DVs with varying
+numbers of bits, and the first decision variable has 30
+bits!  That will require some special handling -- I think
+blowing everything out to 80 (0,1) DVs, each with delta
+equal to 1.0.
+
+This is something to work in parallel, however.  Because
+it's time for... the C version.
