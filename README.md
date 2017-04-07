@@ -33,14 +33,18 @@ surrendering control of program execution to the MOEA.
 δMOEA's asynchronous evaluation model works differently,
 putting the user in control of evaluation.  Instead of one
 `optimize` function, δMOEA provides two: `get_sample`
-and `return_evaluated_individual`.  This split means that
-the user can:
+and `return_evaluated_individual`.  In between calling
+these two functions, it is expected, but not required,
+that the user's evaluation function will be called.
+This split means that the user can:
 
 * choose not to evaluate a particular sample
 * return evaluations out of order
 * return evaluations other than those suggested by the
 algorithm, such as evaluations from previous optimization
 runs
+* call `get_sample` a different number of times than
+`return_evaluated_individual`
 
 Furthermore, although δMOEA only suggests samples on grid
 points, it will accept evaluations from anywhere in the
