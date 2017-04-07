@@ -23,7 +23,7 @@ from PyQt5.QtCore import QRect
 from PyQt5.QtCore import Qt
 import sys
 import numpy
-from moeadv.operators import pm_inner
+from .operators import pm_inner
 
 class PMHistogramState(object):
     def __init__(self, di, x_parent, samples, nbins):
