@@ -23,7 +23,7 @@ from PyQt5.QtCore import QRect
 from PyQt5.QtCore import Qt
 import sys
 import numpy
-from udmoea.Sampling import sbx_index
+from dmoea.Sampling import sbx_index
 from random import random
 
 class SBXHistogramState(object):

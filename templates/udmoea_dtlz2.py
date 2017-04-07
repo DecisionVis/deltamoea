@@ -3,30 +3,30 @@ import argparse
 import random
 from collections import namedtuple
 
-from udmoea import MINIMIZE
-from udmoea import MAXIMIZE
-from udmoea import OFAT
-from udmoea import CORNERS
-from udmoea import COUNT
-from udmoea import RANDOM
-from udmoea import RETAIN
-from udmoea import DISCARD
+from dmoea import MINIMIZE
+from dmoea import MAXIMIZE
+from dmoea import OFAT
+from dmoea import CORNERS
+from dmoea import COUNT
+from dmoea import RANDOM
+from dmoea import RETAIN
+from dmoea import DISCARD
 
-from udmoea import Decision
-from udmoea import Objective
-from udmoea import Problem
-from udmoea import Individual
+from dmoea import Decision
+from dmoea import Objective
+from dmoea import Problem
+from dmoea import Individual
 
-from udmoea import create_moea_state
-from udmoea import doe
-from udmoea import get_sample
-from udmoea import return_evaluated_individual
-from udmoea import get_iterator
+from dmoea import create_moea_state
+from dmoea import doe
+from dmoea import get_sample
+from dmoea import return_evaluated_individual
+from dmoea import get_iterator
 
-from udmoea import NearExhaustionWarning
-from udmoea import TotalExhaustionError
+from dmoea import NearExhaustionWarning
+from dmoea import TotalExhaustionError
 
-from udmoea.Functions import decisions_to_grid_point
+from dmoea.Functions import decisions_to_grid_point
 
 from problems.problems import dtlz2
 from problems.problems import dtlz2_rotated
@@ -40,13 +40,13 @@ def the_deltas():
     while True:
         yield 0.1
 
-def run_experiment(runtime_file, rotation_seed, udmoea_seed, nfe):
+def run_experiment(runtime_file, rotation_seed, dmoea_seed, nfe):
     # Top-down view of optimizing a 4,2 DTLZ2 with the new algorithm
     random.seed(rotation_seed)
     ndv = 100
     nobj = 2
     evaluate = dtlz2_rotated(ndv, nobj)
-    random.seed(udmoea_seed)
+    random.seed(dmoea_seed)
     decisions = tuple(
         Decision("decision{}".format(ii), 0.0, 1.0, delta)
         for ii, delta in zip(range(ndv), the_deltas()))
@@ -112,7 +112,7 @@ def run_experiment(runtime_file, rotation_seed, udmoea_seed, nfe):
 
         record = Record(*([
             "{}".format(rotation_seed),
-            "{}".format(udmoea_seed),
+            "{}".format(dmoea_seed),
             "{}".format(ii),] + [
             "{}".format(g) for g in grid_point] + [
             "{:.4f}".format(d) for d in dvs] + [
@@ -128,7 +128,7 @@ def run_experiment(runtime_file, rotation_seed, udmoea_seed, nfe):
         grid_point = decisions_to_grid_point(state.grid, individual.decisions)
         record = Record(*([
             "{}".format(rotation_seed),
-            "{}".format(udmoea_seed),
+            "{}".format(dmoea_seed),
             "{}".format(nfe),] + [
             "{}".format(g) for g in grid_point] + [
             "{:.4f}".format(d) for d in individual.decisions] + [
@@ -150,14 +150,14 @@ def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("runtime_file", type=argparse.FileType('a'))
     parser.add_argument("rotation_seed", type=int, help="seed for generating a random rotation matrix for dtlz2")
-    parser.add_argument("udmoea_seed", type=int, help="seed for UDMOEA's RNG")
+    parser.add_argument("dmoea_seed", type=int, help="seed for DMOEA's RNG")
     parser.add_argument("NFE", type=int, help="length of run")
     args = parser.parse_args()
 
     run_experiment(
         args.runtime_file,
         args.rotation_seed,
-        args.udmoea_seed,
+        args.dmoea_seed,
         args.NFE)
 
 if __name__ == "__main__":

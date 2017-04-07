@@ -1,26 +1,26 @@
 import sys
 
-from udmoea import MINIMIZE
-from udmoea import MAXIMIZE
-from udmoea import OFAT
-from udmoea import CORNERS
-from udmoea import COUNT
-from udmoea import RETAIN
-from udmoea import DISCARD
+from dmoea import MINIMIZE
+from dmoea import MAXIMIZE
+from dmoea import OFAT
+from dmoea import CORNERS
+from dmoea import COUNT
+from dmoea import RETAIN
+from dmoea import DISCARD
 
-from udmoea import Decision
-from udmoea import Objective
-from udmoea import Problem
-from udmoea import Individual
+from dmoea import Decision
+from dmoea import Objective
+from dmoea import Problem
+from dmoea import Individual
 
-from udmoea import create_moea_state
-from udmoea import doe
-from udmoea import get_sample
-from udmoea import return_evaluated_individual
-from udmoea import get_iterator
+from dmoea import create_moea_state
+from dmoea import doe
+from dmoea import get_sample
+from dmoea import return_evaluated_individual
+from dmoea import get_iterator
 
-from udmoea import NearExhaustionWarning
-from udmoea import TotalExhaustionError
+from dmoea import NearExhaustionWarning
+from dmoea import TotalExhaustionError
 
 from problems.problems import dtlz2
 from problems.problems import dtlz2_rotated
