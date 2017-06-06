@@ -423,7 +423,8 @@ def _select_rank(state, ramp):
             break
         occupied_ranks += 1
     # see elsewhere discussion about stack allocation
-    breaks = [occupied_ranks + ramp * ii for ii in range(occupied_ranks)]
+    intervals = [occupied_ranks + ramp * ii for ii in range(occupied_ranks)]
+    breaks = [sum(intervals[:(ii+1)]) for ii in range(occupied_ranks)]
     limit = breaks[-1]
     selection = state.randint(0, limit-1)
     rank_number = 0
