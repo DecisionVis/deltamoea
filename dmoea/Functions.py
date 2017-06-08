@@ -189,7 +189,7 @@ def return_evaluated_individual(state, individual):
     grid_point = decisions_to_grid_point(state.grid, individual.decisions)
     archive_set = state.archive_set
     archive_set.add(grid_point)
-    state._replace(archive_set=archive_set)
+    state = state._replace(archive_set=archive_set)
     issues = state.issued.issues
     for ii in range(len(issues)):
         issue = issues[ii]
@@ -204,7 +204,7 @@ def return_evaluated_individual(state, individual):
             issued = state.issued._replace(
                 issues=issues,
                 issued_set=issued_set)
-            state._replace(issued=issued)
+            state = state._replace(issued=issued)
             break
 
     # ArchiveIndividuals always sort with < and we reverse the transformation
