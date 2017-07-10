@@ -111,7 +111,6 @@ def dtlz2(ndv, nobj):
 def dtlz2_rotated(ndv, nobj):
     rotate = uniform_random_dv_rotation(ndv)
     straight_dtlz2 = dtlz2(ndv, nobj)
-    scale = ndv ** -0.5
     def evaluate(xx):
         rotated = rotate(xx)
         for ii, vv in enumerate(rotated):
