@@ -10,6 +10,8 @@ respect to multiple objectives.  We call δMOEA a "Grid
 Search" algorithm because it samples the model inputs on a
 grid rather than attempting to optimize continuous values.
 
+δMOEA carries the 3-clause BSD license.
+
 ## Computer Models
 
 Computer models of a problem domain express value judgments
@@ -27,25 +29,34 @@ the optimization model "decisions" and the outputs
 Figure 1 shows how an optimization model wraps a domain
 model.
 
-* Decisions are translated by the optimization model into
+* _Decisions_ are translated by the optimization model into
 inputs for the domain model.
 * Some domain model inputs may be held constant and not
 subjected to optimization.
-* Some domain model outputs are translated into objectives
+* Some domain model outputs are translated into _objectives_
 for optimization.  Objectives are numbers that δMOEA will
 attempt to minimize or maximize.
 * Other domain model outputs are translated into
-constraints for optimization.  Constraints are numbers
+_constraints_ for optimization.  Constraints are numbers
 that δMOEA will preemptively try to drive to zero, before
 considering the objectives.
 * Still other domain model outputs are captured as
-tagalongs.  Tagalongs have no role in optimization but may
+_tagalongs_.  Tagalongs have no role in optimization but may
 be of use for decision-making.  In addition, tagalongs
 may preserve domain model inputs and outputs so that
 old domain model evaluations may be reused with a new
 optimization model.
-* Some domain model outputs may be discarded by the
-optimization model.
+* Some domain model outputs may be ignored and discarded
+by the optimization model.
 
+## Multi-Objective Optimization
 
+Multi-Objective Optimization differs from conventional
+(single-objective) optimization in that it seeks to
+approximate a "Pareto Set" representing the tradeoffs among
+multiple objectives, rather than to approximate a single
+optimal value.  Figure 2 illustrates the difference between
+the progress of single-objective and multi-objective
+optimization.
 
+![Figure 2: Single objective versus multi-objective optimization.](svg/multiobjective.svg)
