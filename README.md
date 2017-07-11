@@ -1,16 +1,33 @@
 # δMOEA: Multi-Objective Grid Search Algorithm
 
+(C) 2017 DecisionVis LLC
+
 ## Executive Summary
 
-δMOEA is an optimization library that helps people
-make better decisions using their computer models of a
-problem domain.  δMOEA searches the model inputs for
-combinations that produce optimal model outputs with
-respect to multiple objectives.  We call δMOEA a "Grid
-Search" algorithm because it samples the model inputs on a
-grid rather than attempting to optimize continuous values.
+δMOEA is an optimization library that helps people make
+better decisions using computer models of a problem domain.
+δMOEA searches the model inputs for combinations that
+produce optimal model outputs with respect to multiple
+objectives.  We call δMOEA a "Grid Search" algorithm
+because it samples the model inputs on a grid rather than
+attempting to optimize continuous values.
 
-δMOEA carries the 3-clause BSD license.
+This version of δMOEA is written in Python.
+
+The Python version of δMOEA carries the 3-clause BSD
+license.  See `COPYING.md` for details.
+
+## Getting Started With δMOEA
+
+1. Read the rest of this document for an overview of what
+δMOEA does.
+2. Read `doc/getting_started.md` for a quick guide to
+downloading and using δMOEA.
+3. Read `doc/tutorial.md` for a more detailed walkthrough.
+4. Refer to `doc/api.md` for documentation on δMOEA's
+library functions.
+5. Examine the examples in `examples/` for more ways to use
+δMOEA.
 
 ## Computer Models
 
@@ -70,9 +87,27 @@ in this example.)  The bottom left plot shows both
 objectives over time.  Rather than a single value, both
 objectives develop a range of values that trade off against
 each other.  The final tradeoff is shown in the bottom
-right plot.  Figure 3 is an animated version of Figure
-2 that illustrates the progress of the optimization runs
+right plot.
+
+![Figure 3: Animated optimization](img/animated_optimization.gif)
+
+Figure 3 is an animated version of Figure 2 that
+illustrates the progress of the optimization runs
 over time, as both optimization runs converge towards
 approximations of the optimal values.
 
-![Figure 3: Animated optimization](img/animated_optimization.gif)
+## About The Name
+
+δMOEA uses an evolutionary optimization heuristic to
+improve its Pareto approximation.  This is the origin
+of the "MOEA" in its name: it is a Multi-Objective
+Evolutionary Algorithm.  The δ alludes to the sampling
+grid in the decision space, where δ is the grid spacing.
+The name δMOEA also pays homage to Deb et al.'s εMOEA, an
+influential algorithm that applies a grid on the objective
+space rather than the decision space.
+
+## What Next?
+
+Refer to `doc/getting_started.md` for an overview of how
+to get and use δMOEA.
