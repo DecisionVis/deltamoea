@@ -23,13 +23,14 @@ license.  See `COPYING.md` for details.
 δMOEA does.
 2. Read [`doc/getting_started.md`](doc/getting_started.md)
 for a quick guide to downloading and using δMOEA.
-3. Read `doc/tutorial.md` for a more detailed walkthrough.
-4. Refer to `doc/api.md` for documentation on δMOEA's
-library functions.
-5. Examine the examples in `examples/` for more ways to use
-δMOEA.
-6. Read the documents under `doc/technotes/` for the design
-rationale.
+3. Read [`doc/tutorial.md`](doc/tutorial.md) for a more
+detailed walkthrough.
+4. Refer to [`doc/api.md`](doc/api.md) for documentation
+on δMOEA's library functions.
+5. Examine the examples in [`examples/`](examples) for
+more ways to use δMOEA.
+6. Read the documents under
+[`doc/technotes/`](doc/technotes) for the design rationale.
 
 ## Computer Models
 
@@ -111,5 +112,5 @@ space rather than the decision space.
 
 ## What Next?
 
-Refer to `doc/getting_started.md` for an overview of how
-to get and use δMOEA.
+Refer to [`doc/getting_started.md`](doc/getting_started.md)
+for an overview of how to get and use δMOEA.
