@@ -24,7 +24,7 @@ it from the domain model.  We call the inputs to
 the optimization model "decisions" and the outputs
 "objectives", "constraints", and "tagalongs".
 
-![Figure 1: Optimization model and domain model.](svg/model.svg)
+![Figure 1: Optimization model and domain model.](img/model.svg)
 
 Figure 1 shows how an optimization model wraps a domain
 model.
@@ -59,4 +59,20 @@ optimal value.  Figure 2 illustrates the difference between
 the progress of single-objective and multi-objective
 optimization.
 
-![Figure 2: Single objective versus multi-objective optimization.](svg/multiobjective.svg)
+![Figure 2: Single objective versus multi-objective optimization.](img/multiobjective.svg)
+
+Under single-objective optimization, the objective value is
+continually improved over time (minimized in this example).
+This is the top plot in Figure 2.  Multi-objective
+optimization, on the other hand, attempts to optimize two
+or more objectives at once (minimizing two objectives,
+in this example.)  The bottom left plot shows both
+objectives over time.  Rather than a single value, both
+objectives develop a range of values that trade off against
+each other.  The final tradeoff is shown in the bottom
+right plot.  Figure 3 is an animated version of Figure
+2 that illustrates the progress of the optimization runs
+over time, as both optimization runs converge towards
+approximations of the optimal values.
+
+![Figure 3: Animated optimization](img/animated_optimization.gif)
