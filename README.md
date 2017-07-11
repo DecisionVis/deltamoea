@@ -110,6 +110,13 @@ one more objective allows you to make much more nuanced
 decisions and avoid blowing past the point of diminishing
 returns.  (See Figures 2 and 3.)
 
+Also, compared to not doing optimization at all, and
+simply sampling the entire decision space on a grid, δMOEA
+saves a vast amount of computer time.  As an optimization
+algorithm, δMOEA focuses its sampling on the _interesting_
+part of the decision space, where interest is defined by
+the user in terms of objectives and constraints.
+
 Compared with other multi-objective optimization
 algorithms, δMOEA scales well to large numbers of
 objectives (it has been tested up to 20 objectives)
@@ -124,18 +131,10 @@ Python's `multiprocessing` library, to MPI, to homegrown
 Its design also makes δMOEA easy to use as a library
 rather than as an application.  Where most optimization
 routines want to take control of your model, δMOEA
-decouples sampling and evaluation to put the user in
-control.  This makes it possible to embed δMOEA in
+decouples sampling and evaluation to put the user
+in control.  This makes it possible to embed δMOEA in
 model code rather than shoehorning model code into an
 optimization program.
-
-Finally, compared to not doing optimization at all,
-and simply sampling the entire decision space on a
-grid, δMOEA saves a vast amount of computer time.
-As an optimization algorithm, δMOEA focuses its sampling
-on the _interesting_ part of the decision space, where
-interest is defined by the user in terms of objectives
-and constraints.
 
 ## About The Name
 
