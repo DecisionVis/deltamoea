@@ -1,6 +1,6 @@
 # δMOEA: Multi-Objective Grid Search Algorithm
 
-(C) 2017 [DecisionVis LLC](www.decisionvis.com)
+(C) 2017 [DecisionVis LLC](http://www.decisionvis.com)
 
 ## Executive Summary
 
@@ -21,8 +21,8 @@ license.  See `COPYING.md` for details.
 
 1. Read the rest of this document for an overview of what
 δMOEA does.
-2. Read `doc/getting_started.md` for a quick guide to
-downloading and using δMOEA.
+2. Read [`doc/getting_started.md`](doc/getting_started.md)
+for a quick guide to downloading and using δMOEA.
 3. Read `doc/tutorial.md` for a more detailed walkthrough.
 4. Refer to `doc/api.md` for documentation on δMOEA's
 library functions.
