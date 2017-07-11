@@ -136,6 +136,10 @@ in control.  This makes it possible to embed δMOEA in
 model code rather than shoehorning model code into an
 optimization program.
 
+Finally, because δMOEA is already grid-oriented, it will
+avoid a great deal of unnecessary sampling on mixed-integer
+problems compared to other MOEAs.
+
 ## About The Name
 
 δMOEA uses an evolutionary optimization heuristic to
