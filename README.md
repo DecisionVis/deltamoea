@@ -1,6 +1,6 @@
 # δMOEA: Multi-Objective Grid Search Algorithm
 
-(C) 2017 DecisionVis LLC
+(C) 2017 [DecisionVis LLC](www.decisionvis.com)
 
 ## Executive Summary
 
@@ -28,6 +28,8 @@ downloading and using δMOEA.
 library functions.
 5. Examine the examples in `examples/` for more ways to use
 δMOEA.
+6. Read the documents under `doc/technotes/` for the design
+rationale.
 
 ## Computer Models
 
