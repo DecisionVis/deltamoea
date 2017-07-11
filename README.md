@@ -1,60 +1,31 @@
-# δMOEA: A Multi-Objective Evolutionary Algorithm
+# δMOEA: Multi-Objective Grid Search Algorithm
 
-δMOEA is a multi-objective evolutionary algorithm (MOEA),
-with the following well-established algorithmic elements:
+## Executive Summary
 
-* steady-state evaluation
-* uniform mutation
-* simulated binary crossover
-* nondomination sorting
+δMOEA is an optimization library that helps people
+make better decisions using their computer models of a
+problem domain.  δMOEA searches the model inputs for
+combinations that produce optimal model outputs with
+respect to multiple objectives.  We call δMOEA a "Grid
+Search" algorithm because it samples the model inputs on a
+grid rather than attempting to optimize continuous values.
 
-In addition, δMOEA does some things that no other known
-MOEA does:
+## Computer Models
 
-* Uses real-valued decision variables, but produces samples
-only at points on a user-specified grid.
-* Retains a comprehensive Pareto-ranked archive of (almost)
-every evaluated individual.
-* (Almost) never suggests resampling the same grid point.
-* Determines selection probability based on Pareto rank
-in the comprehensive archive.
+Computer models of a problem domain express value judgments
+about it.  If nothing else, what the author has chosen to
+model is a statement about what is important.  Deciding to
+use optimization, however, often implies an extra layer
+of value judgment on top of the domain model.  We call
+this extra layer the "optimization model" to distinguish
+it from the domain model.  We call the inputs to
+the optimization model "decisions" and the outputs
+"objectives", "constraints", and "tagalongs".
 
-Also, δMOEA is designed for user convenience.  The key
-user-friendly feature is its asynchronous evaluation model.
-The default model for MOEAs is for the user to make a
-single call to the MOEA, providing it with an evaluation
-callback that must conform to the MOEA's expectations of
-what an evaluation function does.  This rigid approach
-limits the user's ability to supply extra evaluated
-individuals, to establish termination conditions, and to
-parallelize evaluation.  In addition, it requires
-surrendering control of program execution to the MOEA.
+Figure 1 shows how an optimization model wraps a domain
+model.
 
-δMOEA's asynchronous evaluation model works differently,
-putting the user in control of evaluation.  Instead of one
-`optimize` function, δMOEA provides two: `get_sample`
-and `return_evaluated_individual`.  In between calling
-these two functions, it is expected, but not required,
-that the user's evaluation function will be called.
-This split means that the user can:
+![Figure 1: Optimization model and domain model.](svg/model.svg)
 
-* choose not to evaluate a particular sample
-* return evaluations out of order
-* return evaluations other than those suggested by the
-algorithm, such as evaluations from previous optimization
-runs
-* call `get_sample` a different number of times than
-`return_evaluated_individual`
 
-Furthermore, although δMOEA only suggests samples on grid
-points, it will accept evaluations from anywhere in the
-decision space.
 
-# Copyright
-
-(C) 2017 DecisionVis LLC
-
-# License
-
-This Python implementation of δMOEA is available under
-the GNU General Public License, Version 3.
