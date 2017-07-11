@@ -426,13 +426,10 @@ def _select_rank(state, ramp):
     intervals = [occupied_ranks + ramp * ii for ii in range(occupied_ranks)]
     breaks = [sum(intervals[:(ii+1)]) for ii in range(occupied_ranks)]
     limit = breaks[-1]
-    selection = state.randint(0, limit-1)
+    selection = state.randint(0, limit)
     rank_number = 0
     while breaks[rank_number] < selection:
         rank_number += 1
-    if rank_number > occupied_ranks:
-        # should never happen!
-        rank_number = occupied_ranks - 1
     return rank_number
 
 def _select(state, rank_number):
