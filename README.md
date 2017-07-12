@@ -23,10 +23,6 @@ license.  See `COPYING.md` for details.
 δMOEA does.
 2. Read [`doc/getting_started.md`](doc/getting_started.md)
 for a quick guide to downloading and using δMOEA.
-<!--
-3. Read [`doc/tutorial.md`](doc/tutorial.md) for a more
-detailed walkthrough.
--->
 3. Refer to [`doc/api.md`](doc/api.md) for documentation
 on δMOEA's library functions.
 4. Examine the examples in [`examples/`](examples) for
