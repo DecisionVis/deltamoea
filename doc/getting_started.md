@@ -63,9 +63,11 @@ archive and running `python setup.py`.
 
 The code for an example optimization run is included in
 the source repository.  See
-[`examples/optimize_dtlz2.py`](examples/optimize_dtlz2.py).
+[`examples/optimize_dtlz2.py`](../examples/optimize_dtlz2.py).
+It is necessary to have cloned the repository or downloaded
+a snapshot to run this example as described below.
 
-To do an optimization run, execute
+From the root directory of the δMOEA repository, execute
 
 ```
 python -m examples.optimize_dtlz2 runtime.csv 0 0 1000 > result.csv
@@ -94,4 +96,17 @@ animation in Figure 1 illustrates this process.
 
 ![Figure 1: Accumulated evaluations](../img/example_optimization.gif)
 
-# Next Step
+## Next Steps
+
+### Work Through the Tutorial
+
+Refer to [`doc/tutorial.md`](../doc/tutorial.md) and work
+through the exercises there.  Read through `api.md` for
+detailed δMOEA documentation.
+
+### Alternative: Dive in Headfirst
+
+Take `optimize_dtlz2.py` and modify it to suit your needs.
+Consult `api.md` for reference as needed.
+
+
