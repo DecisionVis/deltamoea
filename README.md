@@ -151,12 +151,41 @@ The name δMOEA also pays homage to Deb et al.'s εMOEA, an
 influential algorithm that applies a grid on the objective
 space rather than the decision space.
 
+## Python Compatibility
+
+δMOEA is compatible with both Python 2.7.13 (or later)
+and Python 3.6 (or later).  It is likely compatible with
+earlier versions of Python 2.7 and Python 3, but that has
+not been tested.  Furthermore, while performance between
+Python versions is equivalent, results are similar rather
+than identical due to differences in their random number
+generators.
+
+In addition, δMOEA has no library dependencies beyond the
+Python standard library, so it should work on any platform
+and with any interpreter.  (Reports of incompatibility
+are encouraged.)
+
+## Open Source
+
+δMOEA is open source because we believe in multi-objective
+optimization and we want people to use it.  As a business,
+DecisionVis LLC has found that licensing MOEAs gets in
+the way of consulting relationships and produces minimal
+revenue.  The degree to which MOEAs need to integrate
+with domain models and parallelization environments also
+makes closed-source releases unreasonably expensive to
+support and forces us to spend time fighting uninteresting
+integration problems.  So we decided to develop and release
+an open source MOEA to let us work with our customers on
+interesting problems instead.
+
 ## What Next?
 
 Refer to [`doc/getting_started.md`](doc/getting_started.md)
 for an overview of how to get and use δMOEA.
 
-# Shameless Plug
+# Advertisement
 
 [DecisionVis LLC](http://www.decisionvis.com) conceived
 δMOEA and wrote it from scratch.  We can help you use it.
@@ -168,8 +197,8 @@ You might be interested in paying us to:
 * Translate δMOEA into the programming language of your choice
 * Integrate δMOEA into another program
 * Hook δMOEA up to your model of interest
-* Build a GUI frontend that ties δMOEA to your model
-* Build a web frontend that ties δMOEA to your model
+* Build a GUI frontend that ties δMOEA to your domain model
+* Build a web frontend that ties δMOEA to your domain model
 * ...
 
 Visit http://www.decisionvis.com for contact information.
