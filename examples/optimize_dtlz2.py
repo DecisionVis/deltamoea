@@ -152,6 +152,7 @@ def cli():
     parser.add_argument("NFE", type=int, help="length of run")
     args = parser.parse_args()
 
+    # This will raise MOEAError if there is a problem.
     run_experiment(
         args.runtime_file,
         args.rotation_seed,
