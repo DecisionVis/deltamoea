@@ -18,7 +18,7 @@ def make_matrix(ndv):
     for ii in range(ndv):
         for jj in range(ndv):
             matrix[ii][jj] = random.normalvariate(0, 1)
-    # Gram–Schmidt orthonormalization per Wikipedia
+    # Gram-Schmidt orthonormalization per Wikipedia
     # (Iorio's Algorithm 1 wasn't working for me)
     for ii, uu in enumerate(matrix):
         length = sum(x**2 for x in uu)**0.5
