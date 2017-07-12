@@ -41,7 +41,6 @@ def the_deltas():
         yield 0.1
 
 def run_experiment(runtime_file, rotation_seed, dmoea_seed, nfe):
-    # Top-down view of optimizing a 4,2 DTLZ2 with the new algorithm
     random.seed(rotation_seed)
     ndv = 100
     nobj = 2
@@ -80,11 +79,11 @@ def run_experiment(runtime_file, rotation_seed, dmoea_seed, nfe):
         ] + [
         "grid{}".format(d) for d in range(ndv)] + [
         "decision{}".format(d) for d in range(ndv)] + [
-        "objective{}".format(o) for o in range(nobj)] + [
-        "grid_objective{}".format(o) for o in range(nobj)])
-    with open("{}.header.csv".format(runtime_file.name), 'w') as fp:
-        fp.write(",".join(Record._fields))
-        fp.write("\n")
+        "objective{}".format(o) for o in range(nobj)])
+    # write the header only if file is empty
+    if runtime_file.tell() == 0:
+        runtime_file.write(",".join(Record._fields))
+        runtime_file.write("\n")
     for ii in range(1, nfe):
         try:
             state, dvs = get_sample(state)
@@ -116,7 +115,6 @@ def run_experiment(runtime_file, rotation_seed, dmoea_seed, nfe):
             "{}".format(ii),] + [
             "{}".format(g) for g in grid_point] + [
             "{:.4f}".format(d) for d in dvs] + [
-            "{:.4f}".format(o) for o in objs] + [
             "{:.4f}".format(o) for o in objs]
         ))
         runtime_file.write("{}\n".format(",".join(record)))
@@ -124,6 +122,7 @@ def run_experiment(runtime_file, rotation_seed, dmoea_seed, nfe):
             runtime_file.flush()
 
     # Print rank 0
+    print(",".join(Record._fields))
     for individual in get_iterator(state, 0):
         grid_point = decisions_to_grid_point(state.grid, individual.decisions)
         record = Record(*([
@@ -132,7 +131,6 @@ def run_experiment(runtime_file, rotation_seed, dmoea_seed, nfe):
             "{}".format(nfe),] + [
             "{}".format(g) for g in grid_point] + [
             "{:.4f}".format(d) for d in individual.decisions] + [
-            "{:.4f}".format(o) for o in individual.objectives] + [
             "{:.4f}".format(o) for o in individual.objectives]
         ))
         print("{}".format(",".join(record)))
