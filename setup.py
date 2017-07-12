@@ -28,6 +28,7 @@ setup(
         'Topic :: Scientific/Engineering',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 2.7',
     ],
     keywords=[
         "δMOEA", "MOEA", "grid search", "optimization", "multi-objective"],
