@@ -26,7 +26,7 @@ from dmoea import get_iterator
 from dmoea import NearExhaustionWarning
 from dmoea import TotalExhaustionError
 
-from dmoea.Functions import decisions_to_grid_point
+from dmoea import decisions_to_grid_point
 
 from problems.problems import dtlz2
 from problems.problems import dtlz2_rotated

@@ -25,6 +25,7 @@ from .Functions import doe
 from .Functions import return_evaluated_individual
 from .Functions import get_sample
 from .Functions import get_iterator
+from .Functions import decisions_to_grid_point
 
 from .Sampling import NearExhaustionWarning
 from .Sampling import TotalExhaustionError
