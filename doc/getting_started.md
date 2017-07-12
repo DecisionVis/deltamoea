@@ -100,13 +100,13 @@ animation in Figure 1 illustrates this process.
 
 ### Work Through the Tutorial
 
-Refer to [`doc/tutorial.md`](../doc/tutorial.md) and work
-through the exercises there.  Read through `api.md` for
-detailed δMOEA documentation.
+Refer to [`doc/tutorial.md`](tutorial.md) and work through
+the exercises there.  Read through [`doc/api.md`](api.md)
+for detailed δMOEA documentation.
 
 ### Alternative: Dive in Headfirst
 
 Take `optimize_dtlz2.py` and modify it to suit your needs.
-Consult `api.md` for reference as needed.
+Consult [`doc/api.md`](api.md) for reference as needed.
 
 
