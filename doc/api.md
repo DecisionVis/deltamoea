@@ -125,7 +125,7 @@ routine.
 def create_moea_state(problem, **kwargs)
 ```
 
-#### Mandatory Arguments
+#### Positional Arguments
 
 * `problem`: a `dmoea.Problem`
 
@@ -159,7 +159,103 @@ larger number of small ranks.  The default is a compromise
 that uses a great deal of space and accommodates a wide
 variety of problems.
 
+#### Returns
+
+An initialized `MOEAState`.
+
+#### Example
+
+```
+state = dmoea_create_state(problem, ranks=30)
+```
+
+This creates a state object with 30 archive ranks.
+
 ## Main Loop
+
+δMOEA has two "Main Loop" functions: `dmoea.get_sample`
+and `dmoea.return_evaluated_individual`.  These functions
+are ordinarily called in a main optimization loop.
+However, δMOEA does not impose a specific control
+structure and these functions may be called on a valid
+state object at any time and in any order.
+
+### Sampling: `dmoea.get_sample`
+
+`get_sample` produces a set of decision variables and an
+updated state object.  δMOEA works hard to avoid producing
+duplicates, although it is possible that this will happen.
+
+#### Positional Arguments
+
+* `state`: a valid `MOEAState` object
+
+#### Returns
+
+* An `MOEAState` object.
+* A `tuple` of `float` values representing a sample on
+the decision space.
+
+#### Raises
+
+* `dmoea.NearExhaustionWarning`: most of the decision space
+has been sampled.  It's probably not worth continuing, but
+the error can be recovered.
+* `dmoea.TotalExhaustionError`:  The entire decision space
+has been sampled.  It's a waste of electricity to continue,
+but even this error can be recovered.
+
+Recovery: both exception types have a `state` field which
+is a valid `MOEAState`.  Recover by retrieving the `state`
+from the exception object and using it as the state going
+forward.
+
+#### Example
+
+```
+for _ in range(10000):
+    try:
+        state, dvs = get_sample(state)
+    except NearExhaustionWarning as ew:
+        print("Nearly Exhausted!  Switch to exhaustive search!")
+        state = ew.state
+        continue
+    except TotalExhaustionError as te:
+        print("Totally Exhausted!  Escape!")
+        state = te.state
+        break
+```
+
+### Sorting: `dmoea.return_evaluated_individual`
+
+`return_evaluated_individual` sorts an evaluated individual
+into δMOEA's comprehensive Pareto rank archive.
+
+#### Positional Arguments
+
+* `state`: a valid `MOEAState` object
+* `individual`: a `dmoea.Individual`
+
+#### Returns
+
+* An `MOEAState` object.
+
+#### Example
+
+```
+objs, constr, tags = evaluate(dvs)
+individual = Individual(dvs, objs, constr, tags)
+state = return_evaluated_individual(state, individual)
+```
+
+In this example, `dvs` is a tuple of decision variable
+values, `objs` is a tuple of objective function values,
+`constr` is a tuple of constraint values, and `tags` is
+a tuple of tagalong values.  `evaluate` is a function
+implementing an optimization model.  The `Individual`
+returned must have the same number of decisions,
+objectives, constraints, and tagalongs as the `Problem`
+used to initialize the state object.
 
 ## The Archive
 
