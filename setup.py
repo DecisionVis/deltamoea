@@ -14,7 +14,7 @@ with open(path.join(here, "README.md"), encoding='utf-8') as fp:
 
 setup(
     name="deltaMOEA",
-    version='0.90',
+    version='1.00',
     description='Multi-Objective Grid Search Algorithm',
     long_description=long_description,
     url='https://bitbucket.org/decisionvis/dmoea-python',
