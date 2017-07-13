@@ -44,7 +44,7 @@ working with the source.
 
 #### Pip
 
-You can use `pip install dmoea` to install δMOEA.  This is
+You can use `pip install deltamoea` to install δMOEA.  This is
 best done as a user install or within a virtualenv.
 (Pip installs to system directories are a bad idea in
 general.)

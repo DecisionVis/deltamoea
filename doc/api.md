@@ -2,7 +2,7 @@
 
 (C) 2017 [DecisionVis LLC](http://www.decisionvis.com)
 
-## The State Object: `dmoea.MOEAState`
+## The State Object: `deltamoea.MOEAState`
 
 δMOEA works on what is, for Python, a rather unusual
 premise.  δMOEA does not employ an object-oriented design.
@@ -18,7 +18,7 @@ Creating a `MOEAState` requires first defining a `Problem`.
 The `Problem` is in turn defined in terms of decisions,
 objectives, constraints, and tagalongs.
 
-### Preparing a Problem: `dmoea.Decision`
+### Preparing a Problem: `deltamoea.Decision`
 
 This is the definition of the `Decision` type:
 
@@ -29,7 +29,7 @@ Decision = namedtuple("Decision", ("name", "lower", "upper", "delta"))
 To define a `Decision`, initialize its fields.  For example:
 
 ```
-from dmoea import Decision
+from deltamoea import Decision
 decision1 = Decision("decision1", 0.0, 1.0, 0.1)
 decision2 = Decision("decision2", 0, 50, 16)
 ```
@@ -40,7 +40,7 @@ in this example will be sampled on 11 grid points: 0.0,
 1, 17, 33, and 49.  (δMOEA will split the difference if
 the spacing does not evenly divide the range.)
 
-### Preparing a Problem: `dmoea.Objective`
+### Preparing a Problem: `deltamoea.Objective`
 
 This is the definition of the `Objective` type:
 
@@ -51,15 +51,15 @@ Objective = namedtuple("Objective", ("name", "sense"))
 To define an `Objective`, initialize its fields.  For example:
 
 ```
-from dmoea import Objective
-objective1 = Objective("objective1", dmoea.MINIMIZE)
-objective2 = Objective("objective2", dmoea.MAXIMIZE)
+from deltamoea import Objective
+objective1 = Objective("objective1", deltamoea.MINIMIZE)
+objective2 = Objective("objective2", deltamoea.MAXIMIZE)
 ```
 
-Valid values for `sense` are `dmoea.MINIMIZE` and
-`dmoea.MAXIMIZE`.
+Valid values for `sense` are `deltamoea.MINIMIZE` and
+`deltamoea.MAXIMIZE`.
 
-### Preparing a Problem: `dmoea.Constraint`
+### Preparing a Problem: `deltamoea.Constraint`
 
 This is the definition of the `Constraint` type:
 
@@ -70,9 +70,9 @@ Constraint = namedtuple("Constraint", ("name", "sense"))
 To define a `Constraint`, initialize its fields.  For example:
 
 ```
-from dmoea import Constraint
-constraint1 = Constraint("constraint1", dmoea.MINIMIZE)
-constraint2 = Constraint("constraint2", dmoea.MAXIMIZE)
+from deltamoea import Constraint
+constraint1 = Constraint("constraint1", deltamoea.MINIMIZE)
+constraint2 = Constraint("constraint2", deltamoea.MAXIMIZE)
 ```
 
 Constraints, if defined, preempt objectives.  Minimization
@@ -83,7 +83,7 @@ considers objectives when comparing two individuals
 if both individuals satisfy all of their constraints.
 Otherwise δMOEA compares their constraints.
 
-### Preparing a Problem: `dmoea.Tagalong`
+### Preparing a Problem: `deltamoea.Tagalong`
 
 This is the definition of the `Tagalong` type:
 
@@ -95,7 +95,7 @@ A tagalong makes it possible to store a value for later
 use.  It has no role in optimization other than to
 increase how much RAM δMOEA uses.
 
-### Preparing a Problem: `dmoea.Problem`
+### Preparing a Problem: `deltamoea.Problem`
 
 This is the definition of the `Problem` type: 
 
@@ -116,25 +116,25 @@ tuples may have zero size, but not all of them.
 For example:
 
 ```
-from dmoea import Decision
-from dmoea import Objective
-from dmoea import Constraint
-from dmoea import Tagalong
-from dmoea import Problem
+from deltamoea import Decision
+from deltamoea import Objective
+from deltamoea import Constraint
+from deltamoea import Tagalong
+from deltamoea import Problem
 problem = Problem(
     (Decision("decision1", 0.0, 1.0, 0.1),
      Decision("decision2", 0, 50, 16)),
-    (Objective("objective1", dmoea.MINIMIZE),
-     Objective("objective2", dmoea.MAXIMIZE)),
-    (Constraint("constraint1", dmoea.MINIMIZE),
-     Constraint("constraint2", dmoea.MAXIMIZE)),
+    (Objective("objective1", deltamoea.MINIMIZE),
+     Objective("objective2", deltamoea.MAXIMIZE)),
+    (Constraint("constraint1", deltamoea.MINIMIZE),
+     Constraint("constraint2", deltamoea.MAXIMIZE)),
     (Tagalong("tagalong")))
 ```
 
 This example defines a problem with two decisions, two
 objectives, two constraints, and one tagalong.
 
-### Creating a State Object: `dmoea.create_moea_state`
+### Creating a State Object: `deltamoea.create_moea_state`
 
 Creating a state object is a more involved initialization
 routine.
@@ -147,7 +147,7 @@ def create_moea_state(problem, **kwargs)
 
 #### Positional Arguments
 
-* `problem`: a `dmoea.Problem`
+* `problem`: a `deltamoea.Problem`
 
 #### Keyword Arguments
 
@@ -155,7 +155,7 @@ def create_moea_state(problem, **kwargs)
 comprehensive archive should contain.  The default is 100.
 * `ranksize`: an `int` indicating how large the ranks
 should be allowed to grow.  The default is 10,000.
-* `float_values`: either `dmoea.RETAIN` or `dmoea.DISCARD`.
+* `float_values`: either `deltamoea.RETAIN` or `deltamoea.DISCARD`.
 Determines whether the actual decision variable values
 should be retained.  Otherwise only the index of the grid
 point is retained.  `DISCARD` is the default.  `RETAIN`
@@ -186,12 +186,12 @@ An initialized `MOEAState`.
 #### Example
 
 ```
-state = dmoea_create_state(problem, ranks=30)
+state = deltamoea_create_state(problem, ranks=30)
 ```
 
 This creates a state object with 30 archive ranks.
 
-### Setting the DOE State: `dmoea.doe`
+### Setting the DOE State: `deltamoea.doe`
 
 δMOEA will perform an initial sample ("design of
 experiments", or DOE) before switching over to evolutionary
@@ -234,9 +234,9 @@ of decisions.
 #### Example
 
 ```
-from dmoea import doe
-from dmoea import OFAT
-from dmoea import CENTERPOINT
+from deltamoea import doe
+from deltamoea import OFAT
+from deltamoea import CENTERPOINT
 state = doe(state, terminate=CENTERPOINT, stage=OFAT)
 ```
 
@@ -264,22 +264,22 @@ initial sampling, set the termination condition to `COUNT`,
 set the `count` to 0, and set the `stage` to `RANDOM`:
 
 ```
-from dmoea import doe
-from dmoea import COUNT
-from dmoea import RANDOM
+from deltamoea import doe
+from deltamoea import COUNT
+from deltamoea import RANDOM
 state = doe(state, terminate=COUNT, count=0, stage=RANDOM)
 ```
 
 ## Main Loop
 
-δMOEA has two "Main Loop" functions: `dmoea.get_sample`
-and `dmoea.return_evaluated_individual`.  These functions
+δMOEA has two "Main Loop" functions: `deltamoea.get_sample`
+and `deltamoea.return_evaluated_individual`.  These functions
 are ordinarily called in a main optimization loop.
 However, δMOEA does not impose a specific control
 structure and these functions may be called on a valid
 state object at any time and in any order.
 
-### Sampling: `dmoea.get_sample`
+### Sampling: `deltamoea.get_sample`
 
 `get_sample` produces a set of decision variables and an
 updated state object.  δMOEA works hard to avoid producing
@@ -297,10 +297,10 @@ the decision space.
 
 #### Raises
 
-* `dmoea.NearExhaustionWarning`: most of the decision space
+* `deltamoea.NearExhaustionWarning`: most of the decision space
 has been sampled.  It's probably not worth continuing, but
 the error can be recovered.
-* `dmoea.TotalExhaustionError`:  The entire decision space
+* `deltamoea.TotalExhaustionError`:  The entire decision space
 has been sampled.  It's a waste of electricity to continue,
 but even this error can be recovered.
 
@@ -325,7 +325,7 @@ for _ in range(10000):
         break
 ```
 
-### Sorting: `dmoea.Individual`
+### Sorting: `deltamoea.Individual`
 
 To return an evaluation to δMOEA, we must first
 construct an `Individual` to represent that evaluation.
@@ -348,7 +348,7 @@ The tuples used to construct an `Individual` may be empty:
 for instance, if the problem has only constraints and no
 objectives, the `objectives` tuple will have zero length.
 
-### Sorting: `dmoea.return_evaluated_individual`
+### Sorting: `deltamoea.return_evaluated_individual`
 
 `return_evaluated_individual` sorts an evaluated individual
 into δMOEA's comprehensive Pareto rank archive.
@@ -356,7 +356,7 @@ into δMOEA's comprehensive Pareto rank archive.
 #### Positional Arguments
 
 * `state`: a valid `MOEAState` object
-* `individual`: a `dmoea.Individual`
+* `individual`: a `deltamoea.Individual`
 
 #### Returns
 
@@ -399,7 +399,7 @@ It is advisable to handle `NearExhaustionWarning` and
 `TotalExhaustionError` to avoid unexpected termination.
 (See the documentation for `get_sample`.)
 
-## Extracting Results: `dmoea.get_iterator`
+## Extracting Results: `deltamoea.get_iterator`
 
 This function returns an iterator over the individuals in
 a rank of δMOEA's Pareto rank archive.

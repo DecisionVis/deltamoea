@@ -40,30 +40,30 @@ import argparse
 import random
 from collections import namedtuple
 
-from dmoea import MINIMIZE
-from dmoea import MAXIMIZE
-from dmoea import OFAT
-from dmoea import CORNERS
-from dmoea import COUNT
-from dmoea import RANDOM
-from dmoea import RETAIN
-from dmoea import DISCARD
+from deltamoea import MINIMIZE
+from deltamoea import MAXIMIZE
+from deltamoea import OFAT
+from deltamoea import CORNERS
+from deltamoea import COUNT
+from deltamoea import RANDOM
+from deltamoea import RETAIN
+from deltamoea import DISCARD
 
-from dmoea import Decision
-from dmoea import Objective
-from dmoea import Problem
-from dmoea import Individual
+from deltamoea import Decision
+from deltamoea import Objective
+from deltamoea import Problem
+from deltamoea import Individual
 
-from dmoea import create_moea_state
-from dmoea import doe
-from dmoea import get_sample
-from dmoea import return_evaluated_individual
-from dmoea import get_iterator
+from deltamoea import create_moea_state
+from deltamoea import doe
+from deltamoea import get_sample
+from deltamoea import return_evaluated_individual
+from deltamoea import get_iterator
 
-from dmoea import NearExhaustionWarning
-from dmoea import TotalExhaustionError
+from deltamoea import NearExhaustionWarning
+from deltamoea import TotalExhaustionError
 
-from dmoea import decisions_to_grid_point
+from deltamoea import decisions_to_grid_point
 
 from problems.problems import dtlz2
 from problems.problems import dtlz2_rotated

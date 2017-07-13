@@ -13,8 +13,8 @@ with open(path.join(here, "README.rst"), encoding='utf-8') as fp:
     long_description = fp.read()
 
 setup(
-    name="dmoea",
-    version='1.3',
+    name="deltamoea",
+    version='1.4',
     description='Multi-Objective Grid Search Algorithm',
     long_description=long_description,
     url='https://bitbucket.org/decisionvis/dmoea-python',
@@ -32,6 +32,6 @@ setup(
     ],
     keywords=[
         "δMOEA", "MOEA", "grid search", "optimization", "multi-objective"],
-    packages=['dmoea'],
+    packages=['deltamoea'],
 )
 
