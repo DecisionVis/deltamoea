@@ -58,7 +58,6 @@ def run_experiment(runtime_file, rotation_seed, dmoea_seed, nfe):
 
     problem = Problem(decisions, objectives, constraints, tagalongs)
 
-    # assume every call could be raising MOEAError
     state = create_moea_state(problem, ranks=100, ranksize=10000, float_values=DISCARD)
 
     # This is only necessary if you have individuals you've already
@@ -152,7 +151,6 @@ def cli():
     parser.add_argument("NFE", type=int, help="length of run")
     args = parser.parse_args()
 
-    # This will raise MOEAError if there is a problem.
     run_experiment(
         args.runtime_file,
         args.rotation_seed,
