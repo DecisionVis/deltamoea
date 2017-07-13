@@ -333,7 +333,7 @@ An _individual_ is a set of decisions (a _sample_) along
 with the objectives, constraints, and tagalongs resulting
 from evaluation.
 
-An `Individual` is defined as follows:
+The `Individual` type is defined as follows:
 
 ```
 Individual = namedtuple("Individual", (
