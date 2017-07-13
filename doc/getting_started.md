@@ -94,7 +94,7 @@ during optimization.  Color by `nfe` to see how δMOEA
 pushes its sampling towards improved solutions.  The
 animation in Figure 1 illustrates this process.
 
-![Figure 1: Accumulated evaluations](../img/example_optimization.gif)
+![Figure 1: Accumulated evaluations](img/example_optimization.gif)
 
 ## Next Steps
 
