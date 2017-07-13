@@ -105,8 +105,9 @@ def create_moea_state(problem, **kwargs):
          for _ in range(ranksize)],
         0,
         set())
-    # initial DOE state is: do 100 random samples
-    doestate = DOEState(RANDOM, COUNT, 0, 100)
+    # This is a placeholder.  We call doe() below to
+    # initialize the doe state.
+    doestate = DOEState(RANDOM, COUNT, 0, 0)
 
     state = MOEAState(
         problem,
@@ -121,6 +122,7 @@ def create_moea_state(problem, **kwargs):
         _randint,
         doestate
     )
+    state = doe(state)
     return state
 
 def doe(state, **kwargs):
@@ -157,7 +159,7 @@ def doe(state, **kwargs):
             is determined by the "count" keyword argument.
         count (int): Number of DOE samples to perform, if COUNT
             is specified as a DOE termination condition.
-            Default is 2 * ndv + 1.
+            Default is ndv.
         stage (CORNERS, CENTERPOINT, OFAT, RANDOM): at which
             stage to start sampling.
     """
