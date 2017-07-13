@@ -20,6 +20,8 @@ objectives, constraints, and tagalongs.
 
 ### Preparing a Problem: `dmoea.Decision`
 
+This is the definition of the `Decision` type:
+
 ```
 Decision = namedtuple("Decision", ("name", "lower", "upper", "delta"))
 ```
@@ -27,6 +29,7 @@ Decision = namedtuple("Decision", ("name", "lower", "upper", "delta"))
 To define a `Decision`, initialize its fields.  For example:
 
 ```
+from dmoea import Decision
 decision1 = Decision("decision1", 0.0, 1.0, 0.1)
 decision2 = Decision("decision2", 0, 50, 16)
 ```
@@ -39,6 +42,8 @@ the spacing does not evenly divide the range.)
 
 ### Preparing a Problem: `dmoea.Objective`
 
+This is the definition of the `Objective` type:
+
 ```
 Objective = namedtuple("Objective", ("name", "sense"))
 ```
@@ -46,6 +51,7 @@ Objective = namedtuple("Objective", ("name", "sense"))
 To define an `Objective`, initialize its fields.  For example:
 
 ```
+from dmoea import Objective
 objective1 = Objective("objective1", dmoea.MINIMIZE)
 objective2 = Objective("objective2", dmoea.MAXIMIZE)
 ```
@@ -55,6 +61,8 @@ Valid values for `sense` are `dmoea.MINIMIZE` and
 
 ### Preparing a Problem: `dmoea.Constraint`
 
+This is the definition of the `Constraint` type:
+
 ```
 Constraint = namedtuple("Constraint", ("name", "sense"))
 ```
@@ -62,6 +70,7 @@ Constraint = namedtuple("Constraint", ("name", "sense"))
 To define a `Constraint`, initialize its fields.  For example:
 
 ```
+from dmoea import Constraint
 constraint1 = Constraint("constraint1", dmoea.MINIMIZE)
 constraint2 = Constraint("constraint2", dmoea.MAXIMIZE)
 ```
@@ -76,6 +85,8 @@ Otherwise δMOEA compares their constraints.
 
 ### Preparing a Problem: `dmoea.Tagalong`
 
+This is the definition of the `Tagalong` type:
+
 ```
 Tagalong = namedtuple("Tagalong", ("name",))
 ```
@@ -85,6 +96,8 @@ use.  It has no role in optimization other than to
 increase how much RAM δMOEA uses.
 
 ### Preparing a Problem: `dmoea.Problem`
+
+This is the definition of the `Problem` type: 
 
 ```
 Problem = namedtuple("Problem", (
@@ -103,6 +116,11 @@ tuples may have zero size, but not all of them.
 For example:
 
 ```
+from dmoea import Decision
+from dmoea import Objective
+from dmoea import Constraint
+from dmoea import Tagalong
+from dmoea import Problem
 problem = Problem(
     (Decision("decision1", 0.0, 1.0, 0.1),
      Decision("decision2", 0, 50, 16)),
@@ -120,6 +138,8 @@ objectives, two constraints, and one tagalong.
 
 Creating a state object is a more involved initialization
 routine.
+
+This is the signature of `create_moea_state`:
 
 ```
 def create_moea_state(problem, **kwargs)
@@ -170,6 +190,85 @@ state = dmoea_create_state(problem, ranks=30)
 ```
 
 This creates a state object with 30 archive ranks.
+
+### Setting the DOE State: `dmoea.doe`
+
+δMOEA will perform an initial sample ("design of
+experiments", or DOE) before switching over to evolutionary
+heuristics.  The `doe` function controls how this sampling
+is performed.  The built in experimental designs are not
+sophisticated.  Users interested in principled approaches
+should investigate saturated fractional factorial designs,
+Latin hypercube sampling, quasirandom sampling, and so on.
+The built-in initial sampling can be disabled and replaced
+with one of these approaches if desired.
+
+#### Positional Arguments
+
+* `state`: a `MOEAState` object
+
+#### Keyword Arguments
+
+* `terminate`: how to terminate the initial sampling.
+This can be `CORNERS`, `OFAT`, `CENTERPOINT`, or `COUNT`.
+The first three options indicate that the initial sampling
+should stop after finishing that step, i.e. after sampling
+all the corners of the decision grid, or after sampling
+one decision at a time, or after sampling the center point
+of the decision space.  `COUNT` indicates that a specified
+number of samples should be issued before switching to
+evolutionary search.  `COUNT` is the default.
+* `count`: an `int`.  If the termination condition is
+`COUNT`, this number controls how many samples will
+be issued.  Otherwise this argument does nothing.
+This defaults to doing as many samples as there are
+decision variables.
+* `stage`: where to start the initial sampling.  This can
+be `CORNERS`, `OFAT`, `CENTERPOINT`, or `RANDOM`.  It
+defaults to `RANDOM`.
+
+Taken together, the default keyword arguments specify
+an initial random sample of size equal to the number
+of decisions.
+
+#### Example
+
+```
+from dmoea import doe
+from dmoea import OFAT
+from dmoea import CENTERPOINT
+state = doe(state, terminate=CENTERPOINT, stage=OFAT)
+```
+
+This example performs an initial sampling that exercises
+each decision individually and then issues a sample for
+the centerpoint of the decision space.  To illustrate,
+a 5x5 grid for 2 decisions would be sampled as follows:
+
+```
+..x..
+.....
+x.x.x
+.....
+..x..
+```
+
+Here, a period indicates an unsampled grid point and an
+x indicates a sampled grid point.
+
+#### Turning Off DOE
+
+To turn off the initial sampling completely, for example
+when reusing previous evaluations or performing one's own
+initial sampling, set the termination condition to `COUNT`,
+set the `count` to 0, and set the `stage` to `RANDOM`:
+
+```
+from dmoea import doe
+from dmoea import COUNT
+from dmoea import RANDOM
+state = doe(state, terminate=COUNT, count=0, stage=RANDOM)
+```
 
 ## Main Loop
 
@@ -226,6 +325,29 @@ for _ in range(10000):
         break
 ```
 
+### Sorting: `dmoea.Individual`
+
+To return an evaluation to δMOEA, we must first
+construct an `Individual` to represent that evaluation.
+An _individual_ is a set of decisions (a _sample_) along
+with the objectives, constraints, and tagalongs resulting
+from evaluation.
+
+An `Individual` is defined as follows:
+
+```
+Individual = namedtuple("Individual", (
+    "decisions",    # tuple of floats
+    "objectives",   # tuple of floats
+    "constraints",  # tuple of floats
+    "tagalongs",    # tuple of floats
+))
+```
+
+The tuples used to construct an `Individual` may be empty:
+for instance, if the problem has only constraints and no
+objectives, the `objectives` tuple will have zero length.
+
 ### Sorting: `dmoea.return_evaluated_individual`
 
 `return_evaluated_individual` sorts an evaluated individual
@@ -257,5 +379,25 @@ returned must have the same number of decisions,
 objectives, constraints, and tagalongs as the `Problem`
 used to initialize the state object.
 
-## The Archive
+## Extracting Results: `dmoea.get_iterator`
+
+This function returns an iterator over the individuals in
+a rank of δMOEA's Pareto rank archive.
+
+#### Positional Arguments
+
+* `state`: a valid `MOEAState` object
+* `rank`: an `int` indicating the desired rank
+
+#### Returns
+
+* A generator function that returns the individuals in
+the requested archive rank
+ 
+#### Example
+
+```
+for individual in get_iterator(state, 0):
+    print(individual)
+```
 
