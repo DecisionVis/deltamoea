@@ -379,6 +379,26 @@ returned must have the same number of decisions,
 objectives, constraints, and tagalongs as the `Problem`
 used to initialize the state object.
 
+## Termination Conditions
+
+Most MOEAs require the user to specify a termination
+condition to the MOEA.  δMOEA leaves the main loop
+to the user.  The simplest possible main loop looks
+like this:
+
+```
+for _ in range(1000):
+    state, dvs = get_sample(state)
+    objs, constr, tags = evaluate(dvs)
+    individual = Individual(dvs, objs, constr, tags)
+    state = return_evaluated_individual(state, individual)
+```
+
+In this example, we get, evaluate, and return 1000 samples.
+It is advisable to handle `NearExhaustionWarning` and
+`TotalExhaustionError` to avoid unexpected termination.
+(See the documentation for `get_sample`.)
+
 ## Extracting Results: `dmoea.get_iterator`
 
 This function returns an iterator over the individuals in
