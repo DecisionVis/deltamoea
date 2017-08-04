@@ -21,14 +21,14 @@ license.  See `COPYING.md` for details.
 
 1. Read the rest of this document for an overview of what
 δMOEA does.
-2. Read [`doc/getting_started.md`](doc/getting_started.md)
+2. Read [doc/getting_started.md](doc/getting_started.md)
 for a quick guide to downloading and using δMOEA.
-3. Refer to [`doc/api.md`](doc/api.md) for documentation
+3. Refer to [doc/api.md](doc/api.md) for documentation
 on δMOEA's library functions.
-4. Examine the examples in [`examples/`](examples) for
+4. Examine the examples in [examples/](examples) for
 more ways to use δMOEA.
 5. Read the documents under
-[`doc/technotes/`](doc/technotes) for the design rationale.
+[doc/technotes/](doc/technotes) for the design rationale.
 
 ## Computer Models
 
@@ -180,7 +180,7 @@ interesting problems instead.
 
 ## What Next?
 
-Refer to [`doc/getting_started.md`](doc/getting_started.md)
+Refer to [doc/getting_started.md](doc/getting_started.md)
 for an overview of how to get and use δMOEA.
 
 # Advertisement
