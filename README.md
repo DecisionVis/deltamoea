@@ -29,6 +29,8 @@ on δMOEA's library functions.
 more ways to use δMOEA.
 5. Read the documents under
 [doc/technotes/](doc/technotes) for the design rationale.
+6. For a list of technical questions and answers about δMOEA, read
+[doc/design_questions.md](doc/design_questions.md).
 
 ## Computer Models
 
