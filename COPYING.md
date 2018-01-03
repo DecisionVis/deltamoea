@@ -1,4 +1,4 @@
-Copyright (c) 2017 DecisionVis, LLC. All rights reserved. 
+Copyright (c) 2018 DecisionVis, LLC. All rights reserved. 
 
 Redistribution and use in source and binary forms, with
 or without modification, are permitted provided that the
