@@ -1,6 +1,6 @@
 # δMOEA: Multi-Objective Grid Search Algorithm
 
-(C) 2017 [DecisionVis LLC](http://www.decisionvis.com)
+(C) 2017-2018 [DecisionVis LLC](http://www.decisionvis.com)
 
 ## Executive Summary
 
