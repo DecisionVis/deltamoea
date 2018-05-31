@@ -14,7 +14,7 @@ with open(path.join(here, "README.rst"), encoding='utf-8') as fp:
 
 setup(
     name="deltamoea",
-    version='1.4',
+    version='1.5',
     description='Multi-Objective Grid Search Algorithm',
     long_description=long_description,
     url='https://github.com/DecisionVis/deltamoea',
