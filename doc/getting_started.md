@@ -13,7 +13,7 @@ work with the source code of δMOEA itself.
 
 Use `git` to clone the repository found at:
 
-[https://github.com/DecisionVis/dmoea-python.git](https://github.com/DecisionVis/dmoea-python.git).
+[https://github.com/DecisionVis/deltamoea.git](https://github.com/DecisionVis/deltamoea.git).
 
 The `master` branch always points at the last stable
 release of δMOEA.  Releases are tagged.
@@ -27,7 +27,7 @@ GitHub automatically rolls up the δMOEA repository into
 the archive format of your choice.  Download a release
 snapshot from
 
-[https://github.com/DecisionVis/dmoea-python/releases](https://github.com/DecisionVis/dmoea-python/releases)
+[https://github.com/DecisionVis/deltamoea/releases](https://github.com/DecisionVis/deltamoea/releases)
 
 The disadvantage of this approach relative to cloning the
 repository is that it does not preserve the commit history.

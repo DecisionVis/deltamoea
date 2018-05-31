@@ -199,6 +199,6 @@ You might be interested in paying us to:
 * Hook δMOEA up to your model of interest
 * Build a GUI frontend that ties δMOEA to your domain model
 * Build a web frontend that ties δMOEA to your domain model
-* ...
+* Do end-to-end model integration, optimization, and analysis
 
 Visit http://www.decisionvis.com for contact information.

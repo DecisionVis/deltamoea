@@ -17,7 +17,7 @@ setup(
     version='1.4',
     description='Multi-Objective Grid Search Algorithm',
     long_description=long_description,
-    url='https://github.com/DecisionVis/dmoea-python',
+    url='https://github.com/DecisionVis/deltamoea',
     author="DecisionVis LLC",
     author_email="team@decisionvis.com",
     license="BSD",
