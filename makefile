@@ -1,6 +1,6 @@
 all: dist/prepared
 
-dist/prepared: makefile setup.py dmoea/Constants.py dmoea/Functions.py dmoea/Sampling.py dmoea/Sorting.py dmoea/Structures.py dmoea/__init__.py README.rst
+dist/prepared: makefile setup.py deltamoea/Constants.py deltamoea/Functions.py deltamoea/Sampling.py deltamoea/Sorting.py deltamoea/Structures.py deltamoea/__init__.py README.rst
 	python setup.py sdist --formats gztar,zip && python setup.py bdist_wheel --universal && touch dist/prepared
 	
 README.rst: README.md

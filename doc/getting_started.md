@@ -13,7 +13,7 @@ work with the source code of δMOEA itself.
 
 Use `git` to clone the repository found at:
 
-[https://bitbucket.org/decisionvis/dmoea-python/](https://bitbucket.org/decisionvis/dmoea-python/).
+[https://github.com/DecisionVis/dmoea-python.git](https://github.com/DecisionVis/dmoea-python.git).
 
 The `master` branch always points at the last stable
 release of δMOEA.  Releases are tagged.
@@ -23,15 +23,11 @@ release of δMOEA.  Releases are tagged.
 This option is recommended for developers who cannot use
 git (or prefer not to).
 
-Bitbucket automatically rolls up the δMOEA repository
-into the archive format of your choice.  Download a
-release snapshot from
+GitHub automatically rolls up the δMOEA repository into
+the archive format of your choice.  Download a release
+snapshot from
 
-[https://bitbucket.org/decisionvis/dmoea-python/downloads/?tab=tags](https://bitbucket.org/decisionvis/dmoea-python/downloads/?tab=tags)
-
-or get any branch from
-
-[https://bitbucket.org/decisionvis/dmoea-python/downloads/?tab=branches](https://bitbucket.org/decisionvis/dmoea-python/downloads/?tab=branches)
+[https://github.com/DecisionVis/dmoea-python/releases](https://github.com/DecisionVis/dmoea-python/releases)
 
 The disadvantage of this approach relative to cloning the
 repository is that it does not preserve the commit history.
@@ -49,12 +45,12 @@ best done as a user install or within a virtualenv.
 (Pip installs to system directories are a bad idea in
 general.)
 
-#### Alternative: Download a δMOEA Release Package
+#### Alternative: Manually Download a δMOEA Release Package from PyPI
 
-δMOEA releases are available as tarballs, zip files,
-and Python Wheels from Bitbucket:
+δMOEA releases are available as tarballs and Python Wheels
+from PyPI:
 
-[https://bitbucket.org/decisionvis/dmoea-python/downloads/](https://bitbucket.org/decisionvis/dmoea-python/downloads/)
+[https://pypi.org/project/deltamoea/#files](https://pypi.org/project/deltamoea/#files)
 
 These can also be installed with pip or by extracting the
 archive and running `python setup.py`.
