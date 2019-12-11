@@ -185,20 +185,3 @@ interesting problems instead.
 Refer to [doc/getting_started.md](doc/getting_started.md)
 for an overview of how to get and use δMOEA.
 
-# Advertisement
-
-[DecisionVis LLC](http://www.decisionvis.com) conceived
-δMOEA and wrote it from scratch.  We can help you use it.
-
-You might be interested in paying us to:
-
-* Train you to use δMOEA
-* Support δMOEA
-* Translate δMOEA into the programming language of your choice
-* Integrate δMOEA into another program
-* Hook δMOEA up to your model of interest
-* Build a GUI frontend that ties δMOEA to your domain model
-* Build a web frontend that ties δMOEA to your domain model
-* Do end-to-end model integration, optimization, and analysis
-
-Visit http://www.decisionvis.com for contact information.
