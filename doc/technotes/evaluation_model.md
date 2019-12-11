@@ -39,22 +39,22 @@ could take a significant amount of time or encounter an
 error condition presents a further complication that must
 be designed around.
 
-## UDMOEA Does Not Have A Main Loop
+## δMOEA Does Not Have A Main Loop
 
 Inside the `optimize` function provided by a conventional
 MOEA library, there is a main loop that calls the 
-`evaluation_function` repeatedly.  UDMOEA has no such main
-loop.  Instead, of one `optimize` function, UDMOEA presents
+`evaluation_function` repeatedly.  δMOEA has no such main
+loop.  Instead, of one `optimize` function, δMOEA presents
 two functions that may be called any number of times in
 any order: `return_evaluated_individual` and `get_sample`.
 
 `get_sample` requests a set of decision variables from
-UDMOEA.  What is to be done with these decision variables
+δMOEA.  What is to be done with these decision variables
 is entirely up to the user.  `return_evaluated_individual`
-provides UDMOEA with a set of decision variables,
+provides δMOEA with a set of decision variables,
 objectives, constraints, and tagalong variables
 corresponding to one model evaluation.  This de-coupled
-design allows the user to provide UDMOEA with information
+design allows the user to provide δMOEA with information
 from previous model runs, whether they originated in
 initial model exploration, a designed experiment, or a
 previous optimization run.  Furthermore, it allows complex
@@ -62,7 +62,7 @@ scenarios like local optimization, out-of-order
 evaluation, and injection of user-suggested designs.
 
 Despite supporting much more complex uses, writing a
-simple main loop for UDMOEA is no more complicated than
+simple main loop for δMOEA is no more complicated than
 an invocation of the traditional `optimize` function,
 especially considering that it is not necessary to
 conform to the `evaluation_function` signature, which
@@ -104,7 +104,7 @@ In general their role for the user is to _**preserve enough
 information about a model evaluation to make repeating
 that evaluation unnecessary in the future.**_  While the user
 could store tagalongs offline instead (and should do so
-for large or complicated cases), allowing UDMOEA to handle
+for large or complicated cases), allowing δMOEA to handle
 a reasonable amount of tagalong data in its Archive is a
 powerful convenience feature.
 
