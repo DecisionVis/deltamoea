@@ -68,20 +68,20 @@ individuals are in the search population.  ε-dominance has
 allowed MOEAs to optimize problems with more than three,
 and as many as a dozen, objectives.
 
-## UDMOEA's Approach to Diversity Maintenance
+## δMOEA's Approach to Diversity Maintenance
 
-UDMOEA maintains diversity through two complementary
+δMOEA maintains diversity through two complementary
 measures: (1) it imposes a grid on the decision space
 of the problem, and (2) it retains a very large number
 of individuals in its Archive (every one of them,
 for any reasonable number of evaluations.)  Imposing a
 grid on the decision space means subdividing it into
-boxes, each of which UDMOEA will sample only once, at a
+boxes, each of which δMOEA will sample only once, at a
 representative point (a "grid point").  The mechanism by
-which UDMOEA samples each box only once is by comparison
+which δMOEA samples each box only once is by comparison
 with its comprehensive archive.  It will emit a sample for
 a grid point only if that sample does not already exist
-in the archive.  This procedure forces UDMOEA to sample
+in the archive.  This procedure forces δMOEA to sample
 previously unexplored parts of the decision space.
 
 
