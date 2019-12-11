@@ -2,9 +2,9 @@
 
 2017-02-15 08:35
 
-Comprehensive archiving means that UDMOEA does not maintain
+Comprehensive archiving means that δMOEA does not maintain
 an active search population like other MOEAs.  Instead,
-UDMOEA archives every evaluation and uses a selection
+δMOEA archives every evaluation and uses a selection
 mechanism to supply evolutionary pressure.
 
 Archiving all, or at least a very large number of,
@@ -20,7 +20,7 @@ to make room for new.  This assumption no longer holds.
 
 The Archive is a large array of individuals, subdivided
 into ranks.  Each rank corresponds to a Pareto rank.
-By default, UDMOEA uses a large number of large ranks:
+By default, δMOEA uses a large number of large ranks:
 100 ranks of 10,000 individuals each.  Each individual
 is represented as a grid point, a set of objective values,
 a set of constraint values, and a set of tagalong values.
@@ -41,7 +41,7 @@ or about 40 megabytes.  Storing 100 ranks thus requires
 
 4 gigabytes is a large but obtainable amount of memory
 on a modern workstation.  Furthermore, the Archive
-represents the overwhelming bulk of UDMOEA's memory
+represents the overwhelming bulk of δMOEA's memory
 allocation, and its size is fixed.  The user can
 select a rank size or number of ranks suited to the
 problem, as well.  Problems with fewer objectives will
@@ -50,8 +50,8 @@ more objectives will likely not require so many ranks.
 
 ## Scanning
 
-So that UDMOEA will not issue the same sample a second time,
-it must scan its Archive.  Since most of UDMOEA's
+So that δMOEA will not issue the same sample a second time,
+it must scan its Archive.  Since most of δMOEA's
 evolutionary search activity will be in the vicinity of 
 Archive rank 0, most duplicates will be found without
 scanning a large number of ranks.  However, no sample
@@ -89,7 +89,7 @@ most problems will never fill a rank with nondominated
 individuals.  Nevertheless, it is possible that this
 will happen.  If it does, the overflow individuals will be
 sorted into the next rank and a warning will be emitted.
-While it will be possible for UDMOEA to continue its
+While it will be possible for δMOEA to continue its
 multiobjective search in this case, its selection
 preference for superior Pareto ranks will disfavor the
 part of decision space represented by the individuals that
@@ -98,14 +98,14 @@ were forced into an inferior Pareto rank.
 ## Archive Overflow
 
 If the problem structure results in a large number
-of Pareto ranks, UDMOEA will collect the most inferior
+of Pareto ranks, δMOEA will collect the most inferior
 individuals in the last rank.  Therefore there will be no
 guarantee that the last rank is nondominated with respect
 to itself, unlike the other ranks. If the last rank fills
-up, UDMOEA will, as a last resort, issue a warning and
+up, δMOEA will, as a last resort, issue a warning and
 begin arbitrarily discarding individuals from the last
 rank.  This means that with the default parameterization,
-in the worst possible case, UDMOEA will begin discarding
+in the worst possible case, δMOEA will begin discarding
 individuals after 10,099 have been inserted in the Archive.
 
 The worst possible case mentioned above is not entirely
@@ -126,7 +126,7 @@ has available samples that were not sampled on the same
 grid, or on any grid.  There may be multiple individuals
 at different places in the same grid box.
 
-UDMOEA's strategy for off-grid individuals is as follows:
+δMOEA's strategy for off-grid individuals is as follows:
 permit at most one sample from any grid box in each
 Archive rank.  This requires a slight tweak to the
 dominance relation.  If two individuals from the same
