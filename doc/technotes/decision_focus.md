@@ -2,7 +2,7 @@
 
 2017-02-14 13:29
 
-UDMOEA attempts to find nondominated points that occupy
+δMOEA attempts to find nondominated points that occupy
 as much of the decision space as possible.  This is unusual.
 In general, MOEAs focus on occupying as much of the
 objective space as possible.  Indeed, since the 1990s,
